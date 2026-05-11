@@ -130,6 +130,66 @@
     }
     .vote-chip strong { color: #fff; }
 
+    /* ── Distribution chart ── */
+    .chart-wrap {
+      margin-top: 20px;
+      background: #0f3460;
+      border-radius: 10px;
+      padding: 16px 12px 8px;
+    }
+    .chart-wrap svg { display: block; width: 100%; overflow: visible; }
+
+    /* ── Consensus banner ── */
+    .consensus-banner {
+      position: fixed;
+      top: 80px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-20px);
+      background: linear-gradient(135deg, #e94560, #f5a623);
+      color: #fff;
+      font-size: 1.3rem;
+      font-weight: 700;
+      padding: 14px 36px;
+      border-radius: 50px;
+      box-shadow: 0 8px 32px rgba(233,69,96,0.5);
+      z-index: 500;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.4s, transform 0.4s;
+      white-space: nowrap;
+    }
+    .consensus-banner.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* ── Party emojis ── */
+    @keyframes partyRise {
+      0%   { transform: translateY(0)      rotate(0deg);   opacity: 1; }
+      80%  { opacity: 1; }
+      100% { transform: translateY(-105vh) rotate(540deg); opacity: 0; }
+    }
+    @keyframes partyDrift {
+      0%   { transform: translateX(0); }
+      25%  { transform: translateX(40px); }
+      75%  { transform: translateX(-40px); }
+      100% { transform: translateX(0); }
+    }
+    .party-wrap {
+      position: fixed;
+      bottom: -60px;
+      pointer-events: none;
+      z-index: 400;
+    }
+    .party-emoji {
+      font-size: 2rem;
+      animation: partyRise linear forwards;
+      display: block;
+    }
+    .party-drift {
+      animation: partyDrift ease-in-out infinite;
+    }
+
     /* ── Participants ── */
     .participants-grid {
       display: flex;
@@ -296,7 +356,13 @@
       <div class="results-avg" id="resultsAvg">—</div>
       <div class="results-unit">Durchschnitt</div>
       <div class="results-votes" id="resultsVotes"></div>
+      <div class="chart-wrap" id="chartWrap" style="display:none">
+        <svg id="chartSvg" height="130"></svg>
+      </div>
     </div>
+
+    <!-- Consensus banner (hidden by default) -->
+    <div class="consensus-banner" id="consensusBanner">🎉 Konsens! Alle einig!</div>
 
     <div class="section-label">Teilnehmer</div>
     <div class="participants-grid" id="participantsGrid">
@@ -487,6 +553,9 @@
         chip.innerHTML = `<strong>${p.vote || '—'}</strong> ${p.name}`;
         chips.appendChild(chip);
       });
+
+      renderChart(participants);
+      if (checkConsensus(participants)) triggerParty();
     }
 
     // ── Controls ──────────────────────────────────────────
@@ -504,6 +573,7 @@
       });
       roomRef.update({ revealed: false });
       myVote = null;
+      partyFired = false;
       updateCardState();
     }
 
@@ -513,6 +583,106 @@
         const btn = document.getElementById('copyBtn');
         btn.textContent = '✓ Kopiert!';
         setTimeout(() => { btn.textContent = '🔗 Link kopieren'; }, 2000);
+      });
+    }
+
+    // ── Chart ────────────────────────────────────────────
+    function renderChart(participants) {
+      const votes = Object.values(participants).map(p => p.vote).filter(Boolean);
+      const counts = {};
+      votes.forEach(v => { counts[v] = (counts[v] || 0) + 1; });
+      const voted = CARDS.filter(c => counts[c]);
+
+      const chartWrap = document.getElementById('chartWrap');
+      if (voted.length < 2) { chartWrap.style.display = 'none'; return; }
+      chartWrap.style.display = 'block';
+
+      const W = 500, H = 110, PAD_X = 24, PAD_TOP = 22, LABEL_H = 22;
+      const barArea = H - LABEL_H - PAD_TOP;
+      const colW = (W - PAD_X * 2) / voted.length;
+      const maxCount = Math.max(...Object.values(counts));
+
+      let rects = '', texts = '', points = [];
+
+      voted.forEach((val, i) => {
+        const count = counts[val];
+        const cx = PAD_X + i * colW + colW / 2;
+        const bh = (count / maxCount) * barArea;
+        const by = PAD_TOP + (barArea - bh);
+
+        rects += `<rect x="${cx - colW * 0.3}" y="${by}" width="${colW * 0.6}"
+          height="${bh}" rx="4" fill="#e94560" opacity="0.75"/>`;
+        texts += `<text x="${cx}" y="${by - 6}" text-anchor="middle"
+          fill="#e94560" font-size="11" font-weight="600">${count}</text>`;
+        texts += `<text x="${cx}" y="${H - 4}" text-anchor="middle"
+          fill="#7a9abf" font-size="12">${val}</text>`;
+        points.push([cx, by]);
+      });
+
+      // Smooth catmull-rom curve through bar tops
+      const path = catmullRomPath(points);
+
+      document.getElementById('chartSvg').setAttribute('viewBox', `0 0 ${W} ${H}`);
+      document.getElementById('chartSvg').innerHTML =
+        rects + texts +
+        `<path d="${path}" fill="none" stroke="#e94560" stroke-width="2.5"
+          stroke-opacity="0.5" stroke-linecap="round" stroke-linejoin="round"/>` +
+        points.map(([x, y]) =>
+          `<circle cx="${x}" cy="${y}" r="3.5" fill="#e94560" opacity="0.9"/>`
+        ).join('');
+    }
+
+    function catmullRomPath(pts) {
+      if (pts.length < 2) return '';
+      const p = [pts[0], ...pts, pts[pts.length - 1]];
+      let d = `M ${pts[0][0]} ${pts[0][1]}`;
+      for (let i = 1; i < p.length - 2; i++) {
+        const cp1x = p[i][0] + (p[i+1][0] - p[i-1][0]) / 6;
+        const cp1y = p[i][1] + (p[i+1][1] - p[i-1][1]) / 6;
+        const cp2x = p[i+1][0] - (p[i+2][0] - p[i][0]) / 6;
+        const cp2y = p[i+1][1] - (p[i+2][1] - p[i][1]) / 6;
+        d += ` C ${cp1x} ${cp1y} ${cp2x} ${cp2y} ${p[i+1][0]} ${p[i+1][1]}`;
+      }
+      return d;
+    }
+
+    // ── Consensus & party ─────────────────────────────────
+    let partyFired = false;
+
+    function checkConsensus(participants) {
+      const votes = Object.values(participants).map(p => p.vote).filter(Boolean);
+      return votes.length >= 2 && votes.every(v => v === votes[0]);
+    }
+
+    function triggerParty() {
+      if (partyFired) return;
+      partyFired = true;
+
+      // Consensus banner
+      const banner = document.getElementById('consensusBanner');
+      banner.classList.add('show');
+      setTimeout(() => banner.classList.remove('show'), 3500);
+
+      // Bouncing emojis
+      const emojis = ['🎉','🎊','✨','🥳','🎈','🎉','🎊','✨','🎉','🥳',
+                      '🎊','✨','🎈','🎉','🎊','✨','🥳','🎉','🎊','🎈'];
+      emojis.forEach((emoji, i) => {
+        const wrap = document.createElement('div');
+        wrap.className = 'party-wrap party-drift';
+        wrap.style.left = `${5 + Math.random() * 90}%`;
+        wrap.style.animationDuration = `${2 + Math.random() * 2}s`;
+        wrap.style.animationDelay = `${i * 0.12}s`;
+
+        const el = document.createElement('span');
+        el.className = 'party-emoji';
+        el.textContent = emoji;
+        el.style.fontSize = `${1.4 + Math.random() * 1.2}rem`;
+        el.style.animationDuration = `${2.2 + Math.random() * 1.8}s`;
+        el.style.animationDelay = `${i * 0.12}s`;
+
+        wrap.appendChild(el);
+        document.body.appendChild(wrap);
+        setTimeout(() => wrap.remove(), 5000);
       });
     }
 
