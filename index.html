@@ -23,8 +23,8 @@
     .subtitle { color: #64748b; margin-bottom: 32px; font-size: 0.95rem; }
 
     .hero-img {
-      width: 220px;
-      height: 220px;
+      width: 200px;
+      height: 200px;
       object-fit: contain;
       border-radius: 16px;
       margin-bottom: 6px;
@@ -34,33 +34,38 @@
     .image-credit a { color: #cbd5e0; text-decoration: none; }
     .image-credit a:hover { color: #94a3b8; }
 
-    .version {
-      position: fixed;
-      bottom: 12px;
-      left: 16px;
-      font-size: 0.7rem;
-      color: #cbd5e0;
-      pointer-events: none;
-      user-select: none;
-    }
-
     .panel {
       background: #fff;
       border-radius: 16px;
       padding: 32px;
       width: 100%;
-      max-width: 420px;
-      margin-bottom: 16px;
+      max-width: 400px;
       box-shadow: 0 1px 3px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.04);
       border: 1px solid #e2e8f0;
     }
 
-    h2 {
-      font-size: 0.72rem;
-      color: #94a3b8;
+    .field { margin-bottom: 12px; }
+
+    .field-label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #64748b;
+      margin-bottom: 6px;
       text-transform: uppercase;
-      letter-spacing: 0.1em;
-      margin-bottom: 20px;
+      letter-spacing: 0.05em;
+    }
+    .optional-badge {
+      font-size: 0.65rem;
+      font-weight: 400;
+      color: #94a3b8;
+      background: #f1f5f9;
+      border-radius: 4px;
+      padding: 1px 6px;
+      text-transform: none;
+      letter-spacing: 0;
     }
 
     input {
@@ -71,24 +76,22 @@
       border-radius: 8px;
       color: #0f172a;
       font-size: 1rem;
-      margin-bottom: 12px;
       outline: none;
       transition: border-color 0.2s, background 0.2s;
     }
     input:focus { border-color: #e94560; background: #fff; }
     input::placeholder { color: #94a3b8; }
 
-    /* Role picker */
     .role-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 8px;
-      margin-bottom: 14px;
+      margin-bottom: 20px;
     }
     .role-btn {
       border: 1.5px solid #e2e8f0;
       border-radius: 10px;
-      padding: 14px 8px;
+      padding: 12px 8px;
       background: #f8fafc;
       cursor: pointer;
       text-align: center;
@@ -100,7 +103,7 @@
     }
     .role-btn:hover { border-color: #e94560; }
     .role-btn.active { border-color: #e94560; background: #fff5f7; }
-    .role-icon { font-size: 1.5rem; }
+    .role-icon { font-size: 1.4rem; }
     .role-name { font-size: 0.85rem; font-weight: 600; color: #0f172a; }
     .role-desc { font-size: 0.7rem; color: #94a3b8; }
 
@@ -113,13 +116,22 @@
       font-weight: 600;
       cursor: pointer;
       transition: all 0.15s;
+      background: #e94560;
+      color: #fff;
     }
-    .btn-primary { background: #e94560; color: #fff; }
-    .btn-primary:hover { background: #c73652; }
-    .btn-secondary { background: #f1f5f9; color: #0f172a; border: 1.5px solid #e2e8f0; }
-    .btn-secondary:hover { background: #e2e8f0; }
+    .btn:hover { background: #c73652; }
 
-    .error { color: #e94560; font-size: 0.82rem; margin-top: 8px; display: none; }
+    .error { color: #e94560; font-size: 0.82rem; margin-top: 10px; display: none; }
+
+    .version {
+      position: fixed;
+      bottom: 12px;
+      left: 16px;
+      font-size: 0.7rem;
+      color: #cbd5e0;
+      pointer-events: none;
+      user-select: none;
+    }
   </style>
 </head>
 <body>
@@ -130,71 +142,60 @@
   <p class="subtitle">Schätzungen im Team – einfach &amp; live</p>
 
   <div class="panel">
-    <h2>Neuen Raum erstellen</h2>
-    <input type="text" id="createName" placeholder="Dein Name" maxlength="30">
+
+    <div class="field">
+      <div class="field-label">Name</div>
+      <input type="text" id="name" placeholder="Dein Name" maxlength="30" autofocus>
+    </div>
+
+    <div class="field">
+      <div class="field-label">
+        Raum-Code
+        <span class="optional-badge">optional</span>
+      </div>
+      <input type="text" id="roomCode" placeholder="Leer lassen = neuer Raum" maxlength="30">
+    </div>
+
+    <div class="field-label" style="margin-bottom:8px">Rolle</div>
     <div class="role-grid">
-      <button class="role-btn active" id="create-voter" onclick="setRole('create','voter')">
+      <button class="role-btn active" id="btn-voter" onclick="setRole('voter')">
         <span class="role-icon">🃏</span>
         <span class="role-name">Schätzer</span>
         <span class="role-desc">Entwickler · Team</span>
       </button>
-      <button class="role-btn" id="create-observer" onclick="setRole('create','observer')">
+      <button class="role-btn" id="btn-observer" onclick="setRole('observer')">
         <span class="role-icon">👁️</span>
         <span class="role-name">Beobachter</span>
         <span class="role-desc">PO · Stakeholder</span>
       </button>
     </div>
-    <button class="btn btn-primary" onclick="createRoom()">Raum erstellen →</button>
-    <p class="error" id="createError">Bitte gib deinen Namen ein.</p>
+
+    <button class="btn" onclick="enter()">Los geht's →</button>
+    <p class="error" id="error">Bitte gib deinen Namen ein.</p>
+
   </div>
 
-  <div class="panel">
-    <h2>Bestehendem Raum beitreten</h2>
-    <input type="text" id="joinName" placeholder="Dein Name" maxlength="30">
-    <input type="text" id="joinCode" placeholder="Raum-Code (z.B. sprint42)" maxlength="30">
-    <div class="role-grid">
-      <button class="role-btn active" id="join-voter" onclick="setRole('join','voter')">
-        <span class="role-icon">🃏</span>
-        <span class="role-name">Schätzer</span>
-        <span class="role-desc">Entwickler · Team</span>
-      </button>
-      <button class="role-btn" id="join-observer" onclick="setRole('join','observer')">
-        <span class="role-icon">👁️</span>
-        <span class="role-name">Beobachter</span>
-        <span class="role-desc">PO · Stakeholder</span>
-      </button>
-    </div>
-    <button class="btn btn-secondary" onclick="joinRoom()">Beitreten</button>
-    <p class="error" id="joinError">Bitte Name und Raum-Code eingeben.</p>
-  </div>
+  <div class="version">v1.6</div>
 
   <script>
-    const roles = { create: 'voter', join: 'voter' };
+    let selectedRole = 'voter';
 
-    function setRole(ctx, role) {
-      roles[ctx] = role;
-      document.getElementById(`${ctx}-voter`).classList.toggle('active', role === 'voter');
-      document.getElementById(`${ctx}-observer`).classList.toggle('active', role === 'observer');
+    function setRole(role) {
+      selectedRole = role;
+      document.getElementById('btn-voter').classList.toggle('active', role === 'voter');
+      document.getElementById('btn-observer').classList.toggle('active', role === 'observer');
     }
 
-    function generateId() { return Math.random().toString(36).substring(2, 8); }
+    function enter() {
+      const name = document.getElementById('name').value.trim();
+      const code = document.getElementById('roomCode').value.trim().toLowerCase().replace(/\s+/g, '');
+      const err  = document.getElementById('error');
 
-    function createRoom() {
-      const name = document.getElementById('createName').value.trim();
-      const err = document.getElementById('createError');
       if (!name) { err.style.display = 'block'; return; }
       err.style.display = 'none';
-      const roomId = generateId();
-      location.href = `room.html?room=${roomId}&name=${encodeURIComponent(name)}&role=${roles.create}`;
-    }
 
-    function joinRoom() {
-      const name = document.getElementById('joinName').value.trim();
-      const code = document.getElementById('joinCode').value.trim().toLowerCase().replace(/\s+/g, '');
-      const err = document.getElementById('joinError');
-      if (!name || !code) { err.style.display = 'block'; return; }
-      err.style.display = 'none';
-      location.href = `room.html?room=${encodeURIComponent(code)}&name=${encodeURIComponent(name)}&role=${roles.join}`;
+      const roomId = code || Math.random().toString(36).substring(2, 8);
+      location.href = `room.html?room=${encodeURIComponent(roomId)}&name=${encodeURIComponent(name)}&role=${selectedRole}`;
     }
 
     const TWONKS = [
@@ -213,13 +214,9 @@
     document.getElementById('heroImg').src = TWONKS[Math.floor(Math.random() * TWONKS.length)];
 
     document.addEventListener('keydown', e => {
-      if (e.key !== 'Enter') return;
-      const id = document.activeElement?.id;
-      if (id === 'createName') createRoom();
-      else if (id === 'joinName' || id === 'joinCode') joinRoom();
+      if (e.key === 'Enter') enter();
     });
   </script>
 
-  <div class="version">v1.5</div>
 </body>
 </html>
