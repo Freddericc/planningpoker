@@ -9,46 +9,48 @@
 
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      background: #1a1a2e;
-      color: #e0e0e0;
+      background: #f8fafc;
+      color: #0f172a;
       min-height: 100vh;
     }
 
     /* ── Header ── */
     header {
-      background: #16213e;
+      background: #fff;
       padding: 12px 24px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      border-bottom: 1px solid #0f3460;
+      border-bottom: 1px solid #e2e8f0;
       flex-wrap: wrap;
       gap: 10px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
     }
-    .header-logo { font-size: 1.2rem; font-weight: 700; color: #fff; }
+    .header-logo { font-size: 1.2rem; font-weight: 700; color: #0f172a; }
     .header-right { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-    .room-label { color: #555; font-size: 0.85rem; }
+    .room-label { color: #94a3b8; font-size: 0.85rem; }
     .room-code {
-      background: #0f3460;
+      background: #f1f5f9;
       padding: 4px 14px;
       border-radius: 6px;
       font-family: monospace;
       font-size: 0.95rem;
-      color: #e0e0e0;
+      color: #0f172a;
+      border: 1px solid #e2e8f0;
     }
     .copy-btn {
       background: transparent;
-      border: 1px solid #2a4a6a;
-      color: #aaa;
+      border: 1.5px solid #e2e8f0;
+      color: #64748b;
       padding: 5px 12px;
       border-radius: 6px;
       cursor: pointer;
       font-size: 0.8rem;
       transition: all 0.15s;
     }
-    .copy-btn:hover { background: #1e4a7a; color: #fff; }
+    .copy-btn:hover { background: #f1f5f9; color: #0f172a; border-color: #cbd5e0; }
 
-    /* ── Main layout ── */
+    /* ── Main ── */
     main {
       max-width: 960px;
       margin: 0 auto;
@@ -56,10 +58,10 @@
     }
 
     .section-label {
-      font-size: 0.75rem;
+      font-size: 0.72rem;
       text-transform: uppercase;
       letter-spacing: 0.1em;
-      color: #555;
+      color: #94a3b8;
       margin-bottom: 14px;
     }
 
@@ -74,121 +76,92 @@
     .poker-card {
       width: 62px;
       height: 88px;
-      background: #16213e;
-      border: 2px solid #1e4a7a;
+      background: #fff;
+      border: 2px solid #e2e8f0;
       border-radius: 10px;
       display: flex;
       align-items: center;
       justify-content: center;
       font-size: 1.3rem;
       font-weight: 700;
-      color: #c0c0c0;
+      color: #475569;
       cursor: pointer;
       transition: all 0.15s;
       user-select: none;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
     }
     .poker-card:hover {
       border-color: #e94560;
       color: #e94560;
       transform: translateY(-6px);
+      box-shadow: 0 6px 16px rgba(233,69,96,0.15);
     }
     .poker-card.selected {
       background: #e94560;
       border-color: #e94560;
       color: #fff;
       transform: translateY(-10px);
-      box-shadow: 0 8px 24px rgba(233, 69, 96, 0.45);
+      box-shadow: 0 8px 24px rgba(233,69,96,0.4);
     }
     .poker-card.disabled {
-      opacity: 0.4;
+      opacity: 0.35;
       cursor: not-allowed;
       transform: none !important;
+      box-shadow: none;
     }
+
+    /* ── Observer notice ── */
+    .observer-notice {
+      display: none;
+      background: #fff;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 20px 24px;
+      margin-bottom: 40px;
+      color: #64748b;
+      font-size: 0.95rem;
+      align-items: center;
+      gap: 12px;
+    }
+    .observer-notice.visible { display: flex; }
+    .observer-notice span { font-size: 1.6rem; }
 
     /* ── Results ── */
     .results-box {
-      background: #16213e;
-      border: 1px solid #1e4a7a;
+      background: #fff;
+      border: 1px solid #e2e8f0;
       border-radius: 12px;
       padding: 20px 28px;
       margin-bottom: 36px;
       display: none;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
       animation: fadeIn 0.3s ease;
     }
     .results-box.visible { display: block; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: none; } }
 
     .results-avg { font-size: 3rem; font-weight: 700; color: #e94560; line-height: 1; }
-    .results-unit { font-size: 0.85rem; color: #555; margin-top: 4px; }
+    .results-unit { font-size: 0.85rem; color: #94a3b8; margin-top: 4px; }
     .results-votes { margin-top: 12px; display: flex; flex-wrap: wrap; gap: 8px; }
     .vote-chip {
-      background: #0f3460;
+      background: #f1f5f9;
       border-radius: 6px;
       padding: 4px 10px;
       font-size: 0.85rem;
-      color: #bbb;
+      color: #64748b;
+      border: 1px solid #e2e8f0;
     }
-    .vote-chip strong { color: #fff; }
+    .vote-chip strong { color: #0f172a; }
 
     /* ── Distribution chart ── */
     .chart-wrap {
       margin-top: 20px;
-      background: #0f3460;
+      background: #f8fafc;
       border-radius: 10px;
       padding: 16px 12px 8px;
+      border: 1px solid #e2e8f0;
     }
     .chart-wrap svg { display: block; width: 100%; overflow: visible; }
-
-    /* ── Consensus banner ── */
-    .consensus-banner {
-      position: fixed;
-      top: 80px;
-      left: 50%;
-      transform: translateX(-50%) translateY(-20px);
-      background: linear-gradient(135deg, #e94560, #f5a623);
-      color: #fff;
-      font-size: 1.3rem;
-      font-weight: 700;
-      padding: 14px 36px;
-      border-radius: 50px;
-      box-shadow: 0 8px 32px rgba(233,69,96,0.5);
-      z-index: 500;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.4s, transform 0.4s;
-      white-space: nowrap;
-    }
-    .consensus-banner.show {
-      opacity: 1;
-      transform: translateX(-50%) translateY(0);
-    }
-
-    /* ── Party emojis ── */
-    @keyframes partyRise {
-      0%   { transform: translateY(0)      rotate(0deg);   opacity: 1; }
-      80%  { opacity: 1; }
-      100% { transform: translateY(-105vh) rotate(540deg); opacity: 0; }
-    }
-    @keyframes partyDrift {
-      0%   { transform: translateX(0); }
-      25%  { transform: translateX(40px); }
-      75%  { transform: translateX(-40px); }
-      100% { transform: translateX(0); }
-    }
-    .party-wrap {
-      position: fixed;
-      bottom: -60px;
-      pointer-events: none;
-      z-index: 400;
-    }
-    .party-emoji {
-      font-size: 2rem;
-      animation: partyRise linear forwards;
-      display: block;
-    }
-    .party-drift {
-      animation: partyDrift ease-in-out infinite;
-    }
 
     /* ── Participants ── */
     .participants-grid {
@@ -200,20 +173,22 @@
     }
 
     .participant {
-      background: #16213e;
-      border: 1px solid #1e4a7a;
+      background: #fff;
+      border: 1.5px solid #e2e8f0;
       border-radius: 12px;
       padding: 16px 14px;
       min-width: 120px;
       text-align: center;
       transition: border-color 0.2s;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.04);
     }
-    .participant.voted { border-color: #2a6a3a; }
+    .participant.voted { border-color: #86efac; }
     .participant.revealed { border-color: #e94560; }
+    .participant.observer-card { border-style: dashed; background: #fafafa; }
 
     .participant-name {
       font-size: 0.85rem;
-      color: #999;
+      color: #64748b;
       margin-bottom: 12px;
       white-space: nowrap;
       overflow: hidden;
@@ -232,21 +207,33 @@
       margin: 0 auto;
       font-size: 1.2rem;
       font-weight: 700;
-      border: 2px solid #1e4a7a;
-      background: #0f3460;
-      color: #444;
+      border: 2px solid #e2e8f0;
+      background: #f8fafc;
+      color: #cbd5e0;
       transition: all 0.25s;
     }
     .vote-card.voted {
-      border-color: #2a6a3a;
-      background: #1a3a22;
-      color: #4caf50;
+      border-color: #86efac;
+      background: #f0fdf4;
+      color: #16a34a;
       font-size: 1rem;
     }
     .vote-card.revealed {
       border-color: #e94560;
       background: #e94560;
       color: #fff;
+    }
+    .observer-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 0.75rem;
+      color: #94a3b8;
+      background: #f1f5f9;
+      border-radius: 20px;
+      padding: 4px 10px;
+      margin: 0 auto;
+      border: 1px solid #e2e8f0;
     }
 
     /* ── Controls ── */
@@ -263,44 +250,72 @@
     }
     .btn-reveal { background: #e94560; color: #fff; }
     .btn-reveal:hover:not(:disabled) { background: #c73652; }
-    .btn-reset { background: #0f3460; color: #e0e0e0; border: 1px solid #1e4a7a; }
-    .btn-reset:hover { background: #1e4a7a; }
+    .btn-reset { background: #f1f5f9; color: #0f172a; border: 1.5px solid #e2e8f0; }
+    .btn-reset:hover { background: #e2e8f0; }
     .btn:disabled { opacity: 0.35; cursor: not-allowed; }
 
-    /* ── Name overlay ── */
+    /* ── Name / role overlay ── */
     .overlay {
       position: fixed;
       inset: 0;
-      background: rgba(0,0,0,0.85);
+      background: rgba(15,23,42,0.5);
       display: flex;
       align-items: center;
       justify-content: center;
       z-index: 200;
+      backdrop-filter: blur(4px);
     }
     .dialog {
-      background: #16213e;
+      background: #fff;
       border-radius: 16px;
       padding: 40px 36px;
       width: 100%;
-      max-width: 360px;
+      max-width: 380px;
       text-align: center;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.15);
     }
     .dialog .icon { font-size: 2.5rem; margin-bottom: 16px; }
-    .dialog h2 { color: #fff; margin-bottom: 6px; }
-    .dialog p { color: #666; font-size: 0.9rem; margin-bottom: 24px; }
+    .dialog h2 { color: #0f172a; margin-bottom: 6px; }
+    .dialog p { color: #64748b; font-size: 0.9rem; margin-bottom: 20px; }
     .dialog input {
       width: 100%;
-      padding: 12px 16px;
-      background: #0f3460;
-      border: 1px solid #1e4a7a;
+      padding: 11px 16px;
+      background: #f8fafc;
+      border: 1.5px solid #e2e8f0;
       border-radius: 8px;
-      color: #fff;
+      color: #0f172a;
       font-size: 1rem;
-      margin-bottom: 14px;
+      margin-bottom: 12px;
       outline: none;
     }
-    .dialog input:focus { border-color: #e94560; }
-    .dialog input::placeholder { color: #3a5a80; }
+    .dialog input:focus { border-color: #e94560; background: #fff; }
+    .dialog input::placeholder { color: #94a3b8; }
+
+    .role-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    .role-btn {
+      border: 1.5px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 12px 8px;
+      background: #f8fafc;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.15s;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+    }
+    .role-btn:hover { border-color: #e94560; }
+    .role-btn.active { border-color: #e94560; background: #fff5f7; }
+    .role-icon { font-size: 1.4rem; }
+    .role-name { font-size: 0.82rem; font-weight: 600; color: #0f172a; }
+    .role-desc { font-size: 0.68rem; color: #94a3b8; }
+
     .dialog button {
       width: 100%;
       padding: 13px;
@@ -311,26 +326,71 @@
       font-size: 1rem;
       font-weight: 600;
       cursor: pointer;
+      transition: background 0.15s;
     }
     .dialog button:hover { background: #c73652; }
 
-    .waiting {
-      color: #444;
-      font-size: 0.9rem;
-      margin-top: 32px;
-      text-align: center;
+    .waiting { color: #cbd5e0; font-size: 0.9rem; margin-top: 32px; text-align: center; }
+
+    /* ── Consensus banner ── */
+    .consensus-banner {
+      position: fixed;
+      top: 80px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-20px);
+      background: linear-gradient(135deg, #e94560, #f5a623);
+      color: #fff;
+      font-size: 1.3rem;
+      font-weight: 700;
+      padding: 14px 36px;
+      border-radius: 50px;
+      box-shadow: 0 8px 32px rgba(233,69,96,0.4);
+      z-index: 500;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.4s, transform 0.4s;
+      white-space: nowrap;
     }
+    .consensus-banner.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    /* ── Party emojis ── */
+    @keyframes partyRise {
+      0%   { transform: translateY(0) rotate(0deg); opacity: 1; }
+      80%  { opacity: 1; }
+      100% { transform: translateY(-105vh) rotate(540deg); opacity: 0; }
+    }
+    @keyframes partyDrift {
+      0%   { transform: translateX(0); }
+      25%  { transform: translateX(40px); }
+      75%  { transform: translateX(-40px); }
+      100% { transform: translateX(0); }
+    }
+    .party-wrap { position: fixed; bottom: -60px; pointer-events: none; z-index: 400; }
+    .party-emoji { animation: partyRise linear forwards; display: block; }
+    .party-drift { animation: partyDrift ease-in-out infinite; }
   </style>
 </head>
 <body>
 
-  <!-- Name dialog -->
+  <!-- Name + role dialog -->
   <div class="overlay" id="nameOverlay">
     <div class="dialog">
       <div class="icon">🃏</div>
       <h2>Raum beitreten</h2>
-      <p>Wie soll dein Name im Raum erscheinen?</p>
+      <p>Wie möchtest du teilnehmen?</p>
       <input type="text" id="nameInput" placeholder="Dein Name" maxlength="30" autofocus>
+      <div class="role-grid">
+        <button class="role-btn active" id="overlay-voter" onclick="setOverlayRole('voter')">
+          <span class="role-icon">🃏</span>
+          <span class="role-name">Schätzer</span>
+          <span class="role-desc">Entwickler · Team</span>
+        </button>
+        <button class="role-btn" id="overlay-observer" onclick="setOverlayRole('observer')">
+          <span class="role-icon">👁️</span>
+          <span class="role-name">Beobachter</span>
+          <span class="role-desc">PO · Stakeholder</span>
+        </button>
+      </div>
       <button onclick="joinWithName()">Beitreten</button>
     </div>
   </div>
@@ -348,9 +408,22 @@
   <!-- Main -->
   <main>
 
-    <div class="section-label">Deine Schätzung</div>
-    <div class="cards-grid" id="cardsGrid"></div>
+    <!-- Cards (voters only) -->
+    <div id="voterSection">
+      <div class="section-label">Deine Schätzung</div>
+      <div class="cards-grid" id="cardsGrid"></div>
+    </div>
 
+    <!-- Observer notice -->
+    <div class="observer-notice" id="observerNotice">
+      <span>👁️</span>
+      <div>
+        <strong>Du bist als Beobachter dabei.</strong><br>
+        <span style="font-size:0.88rem">Du kannst alle Schätzungen sehen, aber nicht abstimmen.</span>
+      </div>
+    </div>
+
+    <!-- Results -->
     <div class="results-box" id="resultsBox">
       <div class="section-label" style="margin-bottom:10px">Ergebnis</div>
       <div class="results-avg" id="resultsAvg">—</div>
@@ -361,7 +434,7 @@
       </div>
     </div>
 
-    <!-- Consensus banner (hidden by default) -->
+    <!-- Consensus banner -->
     <div class="consensus-banner" id="consensusBanner">🎉 Konsens! Alle einig!</div>
 
     <div class="section-label">Teilnehmer</div>
@@ -388,19 +461,21 @@
   <script>
     const CARDS = ['0', '1', '2', '3', '5', '8', '13', '21', '40', '?', '☕'];
 
-    const params   = new URLSearchParams(window.location.search);
-    const roomId   = (params.get('room') || 'default').toLowerCase();
-    const urlName  = params.get('name') || '';
+    const params  = new URLSearchParams(location.search);
+    const roomId  = (params.get('room') || 'default').toLowerCase();
+    const urlName = params.get('name') || '';
+    const urlRole = params.get('role') || '';
 
     let db, roomRef, participantRef;
-    let userId, myName = '', myVote = null, isRevealed = false;
+    let userId, myName = '', myRole = 'voter', myVote = null;
+    let isRevealed = false, partyFired = false;
+    let overlayRole = 'voter';
 
     // ── Init ──────────────────────────────────────────────
     document.getElementById('displayRoomId').textContent = roomId;
     db = firebase.database();
     roomRef = db.ref(`rooms/${roomId}`);
 
-    // Restore or create persistent user ID for this room
     const storageKey = `pp_${roomId}`;
     const stored = JSON.parse(localStorage.getItem(storageKey) || 'null');
     userId = stored?.id || Math.random().toString(36).substring(2, 12);
@@ -416,17 +491,26 @@
       grid.appendChild(card);
     });
 
-    // Decide whether to show name dialog
-    if (urlName) {
+    // Decide flow
+    if (urlName && urlRole) {
       myName = urlName;
+      myRole = urlRole;
       hide('nameOverlay');
       enterRoom();
     } else if (stored?.name) {
       myName = stored.name;
+      myRole = stored.role || 'voter';
       hide('nameOverlay');
       enterRoom();
     } else {
       show('nameOverlay');
+    }
+
+    // ── Overlay role picker ───────────────────────────────
+    function setOverlayRole(role) {
+      overlayRole = role;
+      document.getElementById('overlay-voter').classList.toggle('active', role === 'voter');
+      document.getElementById('overlay-observer').classList.toggle('active', role === 'observer');
     }
 
     document.getElementById('nameInput').addEventListener('keydown', e => {
@@ -437,17 +521,26 @@
       const val = document.getElementById('nameInput').value.trim();
       if (!val) return;
       myName = val;
+      myRole = overlayRole;
       hide('nameOverlay');
       enterRoom();
     }
 
-    // ── Room ─────────────────────────────────────────────
+    // ── Enter room ────────────────────────────────────────
     function enterRoom() {
-      localStorage.setItem(storageKey, JSON.stringify({ id: userId, name: myName }));
+      localStorage.setItem(storageKey, JSON.stringify({ id: userId, name: myName, role: myRole }));
+
+      // Show/hide voter vs observer UI
+      if (myRole === 'observer') {
+        hide('voterSection');
+        document.getElementById('observerNotice').classList.add('visible');
+      } else {
+        show('voterSection');
+      }
 
       participantRef = db.ref(`rooms/${roomId}/participants/${userId}`);
       participantRef.onDisconnect().remove();
-      participantRef.set({ name: myName, vote: null });
+      participantRef.set({ name: myName, vote: null, role: myRole });
 
       roomRef.on('value', snap => {
         const data = snap.val() || {};
@@ -465,14 +558,9 @@
 
     // ── Card selection ────────────────────────────────────
     function selectCard(val) {
-      if (isRevealed) return;
-      if (myVote === val) {
-        myVote = null;
-        participantRef.update({ vote: null });
-      } else {
-        myVote = val;
-        participantRef.update({ vote: val });
-      }
+      if (isRevealed || myRole === 'observer') return;
+      myVote = myVote === val ? null : val;
+      participantRef.update({ vote: myVote });
       updateCardState();
     }
 
@@ -489,7 +577,7 @@
       pgrid.innerHTML = '';
 
       const entries = Object.entries(participants);
-      if (entries.length === 0) {
+      if (!entries.length) {
         pgrid.innerHTML = '<p class="waiting">Warte auf Teilnehmer…</p>';
         return;
       }
@@ -497,78 +585,157 @@
       entries.forEach(([uid, p]) => {
         const hasVote = !!p.vote;
         const isMe = uid === userId;
+        const isObserver = p.role === 'observer';
 
         const wrap = document.createElement('div');
-        wrap.className = 'participant' + (isRevealed ? ' revealed' : hasVote ? ' voted' : '');
+        wrap.className = 'participant' +
+          (isObserver ? ' observer-card' : isRevealed ? ' revealed' : hasVote ? ' voted' : '');
 
         const nameEl = document.createElement('div');
         nameEl.className = 'participant-name';
         nameEl.innerHTML = p.name + (isMe ? ' <em>(du)</em>' : '');
+        wrap.appendChild(nameEl);
 
-        const voteEl = document.createElement('div');
-        voteEl.className = 'vote-card' + (isRevealed ? ' revealed' : hasVote ? ' voted' : '');
-
-        if (isRevealed) {
-          voteEl.textContent = p.vote || '—';
-        } else if (hasVote) {
-          voteEl.textContent = '✓';
+        if (isObserver) {
+          const badge = document.createElement('div');
+          badge.className = 'observer-badge';
+          badge.innerHTML = '👁️ Beobachter';
+          wrap.appendChild(badge);
         } else {
-          voteEl.textContent = '…';
+          const voteEl = document.createElement('div');
+          voteEl.className = 'vote-card' +
+            (isRevealed ? ' revealed' : hasVote ? ' voted' : '');
+          voteEl.textContent = isRevealed ? (p.vote || '—') : hasVote ? '✓' : '…';
+          wrap.appendChild(voteEl);
         }
 
-        wrap.appendChild(nameEl);
-        wrap.appendChild(voteEl);
         pgrid.appendChild(wrap);
       });
     }
 
-    // ── Reveal button ─────────────────────────────────────
+    // ── Reveal button (only voter votes count) ────────────
     function updateRevealBtn(participants) {
-      const btn = document.getElementById('revealBtn');
-      const anyVote = Object.values(participants).some(p => p.vote);
-      btn.disabled = !anyVote || isRevealed;
+      const voters = Object.values(participants).filter(p => p.role !== 'observer');
+      const anyVote = voters.some(p => p.vote);
+      document.getElementById('revealBtn').disabled = !anyVote || isRevealed;
     }
 
-    // ── Results ───────────────────────────────────────────
+    // ── Results (voters only) ─────────────────────────────
     function showResults(participants) {
-      const allVotes = Object.values(participants).map(p => p.vote).filter(Boolean);
+      const voters = Object.values(participants).filter(p => p.role !== 'observer');
+      const allVotes = voters.map(p => p.vote).filter(Boolean);
       const nums = allVotes.map(v => parseFloat(v)).filter(v => !isNaN(v));
 
-      document.getElementById('resultsBox').classList.add('visible');
       show('resultsBox');
+      document.getElementById('resultsBox').classList.add('visible');
 
-      if (nums.length === 0) {
-        document.getElementById('resultsAvg').textContent = '—';
-      } else {
-        const avg = nums.reduce((a, b) => a + b, 0) / nums.length;
-        document.getElementById('resultsAvg').textContent =
-          Number.isInteger(avg) ? avg : avg.toFixed(1);
-      }
+      document.getElementById('resultsAvg').textContent =
+        nums.length === 0 ? '—'
+        : (() => { const a = nums.reduce((s,v) => s+v, 0)/nums.length; return Number.isInteger(a) ? a : a.toFixed(1); })();
 
       const chips = document.getElementById('resultsVotes');
       chips.innerHTML = '';
-      Object.values(participants).forEach(p => {
+      voters.forEach(p => {
         const chip = document.createElement('div');
         chip.className = 'vote-chip';
         chip.innerHTML = `<strong>${p.vote || '—'}</strong> ${p.name}`;
         chips.appendChild(chip);
       });
 
-      renderChart(participants);
-      if (checkConsensus(participants)) triggerParty();
+      renderChart(voters);
+      if (checkConsensus(voters)) triggerParty();
+    }
+
+    // ── Chart ─────────────────────────────────────────────
+    function renderChart(voters) {
+      const counts = {};
+      voters.map(p => p.vote).filter(Boolean).forEach(v => { counts[v] = (counts[v]||0)+1; });
+      const voted = CARDS.filter(c => counts[c]);
+
+      const wrap = document.getElementById('chartWrap');
+      if (voted.length < 2) { wrap.style.display = 'none'; return; }
+      wrap.style.display = 'block';
+
+      const W=500, H=110, PX=24, PT=22, LH=22;
+      const barH = H - LH - PT;
+      const colW = (W - PX*2) / voted.length;
+      const maxC = Math.max(...Object.values(counts));
+      let rects='', labels='', pts=[];
+
+      voted.forEach((val, i) => {
+        const c = counts[val];
+        const cx = PX + i*colW + colW/2;
+        const bh = (c/maxC)*barH;
+        const by = PT + (barH-bh);
+        rects  += `<rect x="${cx-colW*0.3}" y="${by}" width="${colW*0.6}" height="${bh}" rx="4" fill="#e94560" opacity="0.7"/>`;
+        labels += `<text x="${cx}" y="${by-6}" text-anchor="middle" fill="#e94560" font-size="11" font-weight="600">${c}</text>`;
+        labels += `<text x="${cx}" y="${H-4}" text-anchor="middle" fill="#94a3b8" font-size="12">${val}</text>`;
+        pts.push([cx, by]);
+      });
+
+      const svg = document.getElementById('chartSvg');
+      svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+      svg.innerHTML = rects + labels +
+        `<path d="${catmullRom(pts)}" fill="none" stroke="#e94560" stroke-width="2.5" stroke-opacity="0.45" stroke-linecap="round"/>` +
+        pts.map(([x,y]) => `<circle cx="${x}" cy="${y}" r="3.5" fill="#e94560"/>`).join('');
+    }
+
+    function catmullRom(pts) {
+      if (pts.length < 2) return '';
+      const p = [pts[0], ...pts, pts[pts.length-1]];
+      let d = `M ${pts[0][0]} ${pts[0][1]}`;
+      for (let i=1; i<p.length-2; i++) {
+        const cp1x = p[i][0]   + (p[i+1][0]-p[i-1][0])/6;
+        const cp1y = p[i][1]   + (p[i+1][1]-p[i-1][1])/6;
+        const cp2x = p[i+1][0] - (p[i+2][0]-p[i][0])/6;
+        const cp2y = p[i+1][1] - (p[i+2][1]-p[i][1])/6;
+        d += ` C ${cp1x} ${cp1y} ${cp2x} ${cp2y} ${p[i+1][0]} ${p[i+1][1]}`;
+      }
+      return d;
+    }
+
+    // ── Consensus & party ─────────────────────────────────
+    function checkConsensus(voters) {
+      const votes = voters.map(p => p.vote).filter(Boolean);
+      return votes.length >= 2 && votes.every(v => v === votes[0]);
+    }
+
+    function triggerParty() {
+      if (partyFired) return;
+      partyFired = true;
+
+      const banner = document.getElementById('consensusBanner');
+      banner.classList.add('show');
+      setTimeout(() => banner.classList.remove('show'), 3500);
+
+      const pool = ['🎉','🎊','✨','🥳','🎈'];
+      Array.from({length: 20}, (_, i) => {
+        const wrap = document.createElement('div');
+        wrap.className = 'party-wrap party-drift';
+        wrap.style.left = `${5 + Math.random()*90}%`;
+        wrap.style.animationDuration = `${2 + Math.random()*2}s`;
+        wrap.style.animationDelay = `${i*0.12}s`;
+
+        const el = document.createElement('span');
+        el.className = 'party-emoji';
+        el.textContent = pool[i % pool.length];
+        el.style.fontSize = `${1.4 + Math.random()*1.2}rem`;
+        el.style.animationDuration = `${2.2 + Math.random()*1.8}s`;
+        el.style.animationDelay = `${i*0.12}s`;
+
+        wrap.appendChild(el);
+        document.body.appendChild(wrap);
+        setTimeout(() => wrap.remove(), 5500);
+      });
     }
 
     // ── Controls ──────────────────────────────────────────
-    function revealVotes() {
-      roomRef.update({ revealed: true });
-    }
+    function revealVotes() { roomRef.update({ revealed: true }); }
 
     function resetVotes() {
       db.ref(`rooms/${roomId}/participants`).once('value', snap => {
         const updates = {};
-        Object.keys(snap.val() || {}).forEach(uid => {
-          updates[`${uid}/vote`] = null;
-        });
+        Object.keys(snap.val() || {}).forEach(uid => { updates[`${uid}/vote`] = null; });
         db.ref(`rooms/${roomId}/participants`).update(updates);
       });
       roomRef.update({ revealed: false });
@@ -586,107 +753,6 @@
       });
     }
 
-    // ── Chart ────────────────────────────────────────────
-    function renderChart(participants) {
-      const votes = Object.values(participants).map(p => p.vote).filter(Boolean);
-      const counts = {};
-      votes.forEach(v => { counts[v] = (counts[v] || 0) + 1; });
-      const voted = CARDS.filter(c => counts[c]);
-
-      const chartWrap = document.getElementById('chartWrap');
-      if (voted.length < 2) { chartWrap.style.display = 'none'; return; }
-      chartWrap.style.display = 'block';
-
-      const W = 500, H = 110, PAD_X = 24, PAD_TOP = 22, LABEL_H = 22;
-      const barArea = H - LABEL_H - PAD_TOP;
-      const colW = (W - PAD_X * 2) / voted.length;
-      const maxCount = Math.max(...Object.values(counts));
-
-      let rects = '', texts = '', points = [];
-
-      voted.forEach((val, i) => {
-        const count = counts[val];
-        const cx = PAD_X + i * colW + colW / 2;
-        const bh = (count / maxCount) * barArea;
-        const by = PAD_TOP + (barArea - bh);
-
-        rects += `<rect x="${cx - colW * 0.3}" y="${by}" width="${colW * 0.6}"
-          height="${bh}" rx="4" fill="#e94560" opacity="0.75"/>`;
-        texts += `<text x="${cx}" y="${by - 6}" text-anchor="middle"
-          fill="#e94560" font-size="11" font-weight="600">${count}</text>`;
-        texts += `<text x="${cx}" y="${H - 4}" text-anchor="middle"
-          fill="#7a9abf" font-size="12">${val}</text>`;
-        points.push([cx, by]);
-      });
-
-      // Smooth catmull-rom curve through bar tops
-      const path = catmullRomPath(points);
-
-      document.getElementById('chartSvg').setAttribute('viewBox', `0 0 ${W} ${H}`);
-      document.getElementById('chartSvg').innerHTML =
-        rects + texts +
-        `<path d="${path}" fill="none" stroke="#e94560" stroke-width="2.5"
-          stroke-opacity="0.5" stroke-linecap="round" stroke-linejoin="round"/>` +
-        points.map(([x, y]) =>
-          `<circle cx="${x}" cy="${y}" r="3.5" fill="#e94560" opacity="0.9"/>`
-        ).join('');
-    }
-
-    function catmullRomPath(pts) {
-      if (pts.length < 2) return '';
-      const p = [pts[0], ...pts, pts[pts.length - 1]];
-      let d = `M ${pts[0][0]} ${pts[0][1]}`;
-      for (let i = 1; i < p.length - 2; i++) {
-        const cp1x = p[i][0] + (p[i+1][0] - p[i-1][0]) / 6;
-        const cp1y = p[i][1] + (p[i+1][1] - p[i-1][1]) / 6;
-        const cp2x = p[i+1][0] - (p[i+2][0] - p[i][0]) / 6;
-        const cp2y = p[i+1][1] - (p[i+2][1] - p[i][1]) / 6;
-        d += ` C ${cp1x} ${cp1y} ${cp2x} ${cp2y} ${p[i+1][0]} ${p[i+1][1]}`;
-      }
-      return d;
-    }
-
-    // ── Consensus & party ─────────────────────────────────
-    let partyFired = false;
-
-    function checkConsensus(participants) {
-      const votes = Object.values(participants).map(p => p.vote).filter(Boolean);
-      return votes.length >= 2 && votes.every(v => v === votes[0]);
-    }
-
-    function triggerParty() {
-      if (partyFired) return;
-      partyFired = true;
-
-      // Consensus banner
-      const banner = document.getElementById('consensusBanner');
-      banner.classList.add('show');
-      setTimeout(() => banner.classList.remove('show'), 3500);
-
-      // Bouncing emojis
-      const emojis = ['🎉','🎊','✨','🥳','🎈','🎉','🎊','✨','🎉','🥳',
-                      '🎊','✨','🎈','🎉','🎊','✨','🥳','🎉','🎊','🎈'];
-      emojis.forEach((emoji, i) => {
-        const wrap = document.createElement('div');
-        wrap.className = 'party-wrap party-drift';
-        wrap.style.left = `${5 + Math.random() * 90}%`;
-        wrap.style.animationDuration = `${2 + Math.random() * 2}s`;
-        wrap.style.animationDelay = `${i * 0.12}s`;
-
-        const el = document.createElement('span');
-        el.className = 'party-emoji';
-        el.textContent = emoji;
-        el.style.fontSize = `${1.4 + Math.random() * 1.2}rem`;
-        el.style.animationDuration = `${2.2 + Math.random() * 1.8}s`;
-        el.style.animationDelay = `${i * 0.12}s`;
-
-        wrap.appendChild(el);
-        document.body.appendChild(wrap);
-        setTimeout(() => wrap.remove(), 5000);
-      });
-    }
-
-    // ── Helpers ───────────────────────────────────────────
     function show(id) { document.getElementById(id).style.display = ''; }
     function hide(id) { document.getElementById(id).style.display = 'none'; }
   </script>

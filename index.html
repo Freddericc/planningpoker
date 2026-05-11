@@ -9,8 +9,8 @@
 
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      background: #1a1a2e;
-      color: #e0e0e0;
+      background: #f8fafc;
+      color: #0f172a;
       min-height: 100vh;
       display: flex;
       flex-direction: column;
@@ -20,21 +20,23 @@
     }
 
     .logo { font-size: 3rem; margin-bottom: 12px; }
-    h1 { font-size: 2rem; color: #fff; margin-bottom: 6px; }
-    .subtitle { color: #666; margin-bottom: 48px; font-size: 0.95rem; }
+    h1 { font-size: 2rem; color: #0f172a; margin-bottom: 6px; }
+    .subtitle { color: #64748b; margin-bottom: 48px; font-size: 0.95rem; }
 
-    .card {
-      background: #16213e;
+    .panel {
+      background: #fff;
       border-radius: 16px;
       padding: 32px;
       width: 100%;
-      max-width: 400px;
+      max-width: 420px;
       margin-bottom: 16px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.04);
+      border: 1px solid #e2e8f0;
     }
 
     h2 {
-      font-size: 0.8rem;
-      color: #666;
+      font-size: 0.72rem;
+      color: #94a3b8;
       text-transform: uppercase;
       letter-spacing: 0.1em;
       margin-bottom: 20px;
@@ -42,73 +44,118 @@
 
     input {
       width: 100%;
-      padding: 12px 16px;
-      background: #0f3460;
-      border: 1px solid #1e4a7a;
+      padding: 11px 16px;
+      background: #f8fafc;
+      border: 1.5px solid #e2e8f0;
       border-radius: 8px;
-      color: #fff;
+      color: #0f172a;
       font-size: 1rem;
-      margin-bottom: 10px;
+      margin-bottom: 12px;
       outline: none;
-      transition: border-color 0.2s;
+      transition: border-color 0.2s, background 0.2s;
     }
-    input:focus { border-color: #e94560; }
-    input::placeholder { color: #3a5a80; }
+    input:focus { border-color: #e94560; background: #fff; }
+    input::placeholder { color: #94a3b8; }
 
-    button {
+    /* Role picker */
+    .role-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+    .role-btn {
+      border: 1.5px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 14px 8px;
+      background: #f8fafc;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.15s;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+    }
+    .role-btn:hover { border-color: #e94560; }
+    .role-btn.active { border-color: #e94560; background: #fff5f7; }
+    .role-icon { font-size: 1.5rem; }
+    .role-name { font-size: 0.85rem; font-weight: 600; color: #0f172a; }
+    .role-desc { font-size: 0.7rem; color: #94a3b8; }
+
+    .btn {
       width: 100%;
       padding: 13px;
       border: none;
       border-radius: 8px;
-      font-size: 1rem;
+      font-size: 0.95rem;
       font-weight: 600;
       cursor: pointer;
       transition: all 0.15s;
     }
-
     .btn-primary { background: #e94560; color: #fff; }
     .btn-primary:hover { background: #c73652; }
+    .btn-secondary { background: #f1f5f9; color: #0f172a; border: 1.5px solid #e2e8f0; }
+    .btn-secondary:hover { background: #e2e8f0; }
 
-    .btn-secondary {
-      background: transparent;
-      color: #e0e0e0;
-      border: 1px solid #1e4a7a;
-    }
-    .btn-secondary:hover { background: #1e4a7a; }
-
-    .error {
-      color: #e94560;
-      font-size: 0.85rem;
-      margin-top: 8px;
-      display: none;
-    }
+    .error { color: #e94560; font-size: 0.82rem; margin-top: 8px; display: none; }
   </style>
 </head>
 <body>
 
   <div class="logo">🃏</div>
   <h1>Planning Poker</h1>
-  <p class="subtitle">Schätzungen im Team – einfach & live</p>
+  <p class="subtitle">Schätzungen im Team – einfach &amp; live</p>
 
-  <div class="card">
+  <div class="panel">
     <h2>Neuen Raum erstellen</h2>
     <input type="text" id="createName" placeholder="Dein Name" maxlength="30">
-    <button class="btn-primary" onclick="createRoom()">Raum erstellen →</button>
+    <div class="role-grid">
+      <button class="role-btn active" id="create-voter" onclick="setRole('create','voter')">
+        <span class="role-icon">🃏</span>
+        <span class="role-name">Schätzer</span>
+        <span class="role-desc">Entwickler · Team</span>
+      </button>
+      <button class="role-btn" id="create-observer" onclick="setRole('create','observer')">
+        <span class="role-icon">👁️</span>
+        <span class="role-name">Beobachter</span>
+        <span class="role-desc">PO · Stakeholder</span>
+      </button>
+    </div>
+    <button class="btn btn-primary" onclick="createRoom()">Raum erstellen →</button>
     <p class="error" id="createError">Bitte gib deinen Namen ein.</p>
   </div>
 
-  <div class="card">
+  <div class="panel">
     <h2>Bestehendem Raum beitreten</h2>
     <input type="text" id="joinName" placeholder="Dein Name" maxlength="30">
     <input type="text" id="joinCode" placeholder="Raum-Code (z.B. sprint42)" maxlength="30">
-    <button class="btn-secondary" onclick="joinRoom()">Beitreten</button>
+    <div class="role-grid">
+      <button class="role-btn active" id="join-voter" onclick="setRole('join','voter')">
+        <span class="role-icon">🃏</span>
+        <span class="role-name">Schätzer</span>
+        <span class="role-desc">Entwickler · Team</span>
+      </button>
+      <button class="role-btn" id="join-observer" onclick="setRole('join','observer')">
+        <span class="role-icon">👁️</span>
+        <span class="role-name">Beobachter</span>
+        <span class="role-desc">PO · Stakeholder</span>
+      </button>
+    </div>
+    <button class="btn btn-secondary" onclick="joinRoom()">Beitreten</button>
     <p class="error" id="joinError">Bitte Name und Raum-Code eingeben.</p>
   </div>
 
   <script>
-    function generateId() {
-      return Math.random().toString(36).substring(2, 8);
+    const roles = { create: 'voter', join: 'voter' };
+
+    function setRole(ctx, role) {
+      roles[ctx] = role;
+      document.getElementById(`${ctx}-voter`).classList.toggle('active', role === 'voter');
+      document.getElementById(`${ctx}-observer`).classList.toggle('active', role === 'observer');
     }
+
+    function generateId() { return Math.random().toString(36).substring(2, 8); }
 
     function createRoom() {
       const name = document.getElementById('createName').value.trim();
@@ -116,7 +163,7 @@
       if (!name) { err.style.display = 'block'; return; }
       err.style.display = 'none';
       const roomId = generateId();
-      window.location.href = `room.html?room=${roomId}&name=${encodeURIComponent(name)}`;
+      location.href = `room.html?room=${roomId}&name=${encodeURIComponent(name)}&role=${roles.create}`;
     }
 
     function joinRoom() {
@@ -125,7 +172,7 @@
       const err = document.getElementById('joinError');
       if (!name || !code) { err.style.display = 'block'; return; }
       err.style.display = 'none';
-      window.location.href = `room.html?room=${encodeURIComponent(code)}&name=${encodeURIComponent(name)}`;
+      location.href = `room.html?room=${encodeURIComponent(code)}&name=${encodeURIComponent(name)}&role=${roles.join}`;
     }
 
     document.addEventListener('keydown', e => {
