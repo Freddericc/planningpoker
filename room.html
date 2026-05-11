@@ -48,7 +48,7 @@
       font-size: 0.8rem;
       transition: all 0.15s;
     }
-    .copy-btn:hover { background: #f1f5f9; color: #0f172a; border-color: #cbd5e0; }
+    .copy-btn:hover { background: #f1f5f9; color: #0f172a; }
 
     /* ── Main ── */
     main {
@@ -72,7 +72,6 @@
       gap: 10px;
       margin-bottom: 40px;
     }
-
     .poker-card {
       width: 62px;
       height: 88px;
@@ -138,8 +137,10 @@
       animation: fadeIn 0.3s ease;
     }
     .results-box.visible { display: block; }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: none; } }
-
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-8px); }
+      to   { opacity: 1; transform: none; }
+    }
     .results-avg { font-size: 3rem; font-weight: 700; color: #e94560; line-height: 1; }
     .results-unit { font-size: 0.85rem; color: #94a3b8; margin-top: 4px; }
     .results-votes { margin-top: 12px; display: flex; flex-wrap: wrap; gap: 8px; }
@@ -171,7 +172,6 @@
       margin-bottom: 36px;
       min-height: 110px;
     }
-
     .participant {
       background: #fff;
       border: 1.5px solid #e2e8f0;
@@ -182,10 +182,9 @@
       transition: border-color 0.2s;
       box-shadow: 0 1px 2px rgba(0,0,0,0.04);
     }
-    .participant.voted { border-color: #86efac; }
+    .participant.voted   { border-color: #86efac; }
     .participant.revealed { border-color: #e94560; }
     .participant.observer-card { border-style: dashed; background: #fafafa; }
-
     .participant-name {
       font-size: 0.85rem;
       color: #64748b;
@@ -196,7 +195,6 @@
       max-width: 110px;
     }
     .participant-name em { color: #e94560; font-style: normal; font-size: 0.75rem; }
-
     .vote-card {
       width: 48px;
       height: 66px;
@@ -212,17 +210,8 @@
       color: #cbd5e0;
       transition: all 0.25s;
     }
-    .vote-card.voted {
-      border-color: #86efac;
-      background: #f0fdf4;
-      color: #16a34a;
-      font-size: 1rem;
-    }
-    .vote-card.revealed {
-      border-color: #e94560;
-      background: #e94560;
-      color: #fff;
-    }
+    .vote-card.voted   { border-color: #86efac; background: #f0fdf4; color: #16a34a; font-size: 1rem; }
+    .vote-card.revealed { border-color: #e94560; background: #e94560; color: #fff; }
     .observer-badge {
       display: inline-flex;
       align-items: center;
@@ -232,13 +221,11 @@
       background: #f1f5f9;
       border-radius: 20px;
       padding: 4px 10px;
-      margin: 0 auto;
       border: 1px solid #e2e8f0;
     }
 
     /* ── Controls ── */
-    .controls { display: flex; gap: 12px; flex-wrap: wrap; }
-
+    .controls { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 32px; }
     .btn {
       padding: 12px 30px;
       border: none;
@@ -250,9 +237,79 @@
     }
     .btn-reveal { background: #e94560; color: #fff; }
     .btn-reveal:hover:not(:disabled) { background: #c73652; }
-    .btn-reset { background: #f1f5f9; color: #0f172a; border: 1.5px solid #e2e8f0; }
+    .btn-reset  { background: #f1f5f9; color: #0f172a; border: 1.5px solid #e2e8f0; }
     .btn-reset:hover { background: #e2e8f0; }
     .btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+    /* ── Reactions ── */
+    .reactions-section { margin-bottom: 40px; }
+    .reaction-btns { display: flex; flex-wrap: wrap; gap: 8px; }
+    .reaction-btn {
+      padding: 8px 14px;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 20px;
+      background: #fff;
+      color: #475569;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.15s;
+      white-space: nowrap;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+    }
+    .reaction-btn:hover { border-color: #e94560; color: #e94560; background: #fff5f7; }
+    .reaction-btn:active { transform: scale(0.95); }
+    .reaction-muted {
+      border-color: #f59e0b;
+      color: #d97706;
+      background: #fffbeb;
+    }
+    .reaction-muted:hover { border-color: #d97706; background: #fef3c7; color: #b45309; }
+
+    /* ── Speech bubble ── */
+    @keyframes bubbleLife {
+      0%   { opacity: 0; transform: translateX(-50%) scale(0.75) translateY(12px); }
+      12%  { opacity: 1; transform: translateX(-50%) scale(1.03) translateY(0); }
+      22%  { opacity: 1; transform: translateX(-50%) scale(1)    translateY(0); }
+      78%  { opacity: 1; transform: translateX(-50%) scale(1)    translateY(0); }
+      100% { opacity: 0; transform: translateX(-50%) scale(0.95) translateY(-14px); }
+    }
+    .speech-bubble {
+      position: fixed;
+      top: 22%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #fff;
+      border: 2px solid #e2e8f0;
+      border-radius: 20px;
+      padding: 16px 24px;
+      max-width: 320px;
+      text-align: center;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.12);
+      z-index: 350;
+      pointer-events: none;
+      animation: bubbleLife 5s ease forwards;
+    }
+    .speech-bubble::after {
+      content: '';
+      position: absolute;
+      bottom: -13px;
+      left: 50%;
+      transform: translateX(-50%);
+      border: 7px solid transparent;
+      border-top-color: #e2e8f0;
+    }
+    .speech-bubble::before {
+      content: '';
+      position: absolute;
+      bottom: -10px;
+      left: 50%;
+      transform: translateX(-50%);
+      border: 5px solid transparent;
+      border-top-color: #fff;
+      z-index: 1;
+    }
+    .bubble-author { font-size: 0.75rem; color: #94a3b8; margin-bottom: 6px; }
+    .bubble-text   { font-size: 1.05rem; font-weight: 600; color: #0f172a; }
 
     /* ── Name / role overlay ── */
     .overlay {
@@ -275,8 +332,8 @@
       box-shadow: 0 20px 60px rgba(0,0,0,0.15);
     }
     .dialog .icon { font-size: 2.5rem; margin-bottom: 16px; }
-    .dialog h2 { color: #0f172a; margin-bottom: 6px; }
-    .dialog p { color: #64748b; font-size: 0.9rem; margin-bottom: 20px; }
+    .dialog h2  { color: #0f172a; margin-bottom: 6px; }
+    .dialog p   { color: #64748b; font-size: 0.9rem; margin-bottom: 20px; }
     .dialog input {
       width: 100%;
       padding: 11px 16px;
@@ -290,7 +347,6 @@
     }
     .dialog input:focus { border-color: #e94560; background: #fff; }
     .dialog input::placeholder { color: #94a3b8; }
-
     .role-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -315,8 +371,7 @@
     .role-icon { font-size: 1.4rem; }
     .role-name { font-size: 0.82rem; font-weight: 600; color: #0f172a; }
     .role-desc { font-size: 0.68rem; color: #94a3b8; }
-
-    .dialog button {
+    .dialog button.join-btn {
       width: 100%;
       padding: 13px;
       background: #e94560;
@@ -326,9 +381,8 @@
       font-size: 1rem;
       font-weight: 600;
       cursor: pointer;
-      transition: background 0.15s;
     }
-    .dialog button:hover { background: #c73652; }
+    .dialog button.join-btn:hover { background: #c73652; }
 
     .waiting { color: #cbd5e0; font-size: 0.9rem; margin-top: 32px; text-align: center; }
 
@@ -365,7 +419,7 @@
       75%  { transform: translateX(-40px); }
       100% { transform: translateX(0); }
     }
-    .party-wrap { position: fixed; bottom: -60px; pointer-events: none; z-index: 400; }
+    .party-wrap  { position: fixed; bottom: -60px; pointer-events: none; z-index: 400; }
     .party-emoji { animation: partyRise linear forwards; display: block; }
     .party-drift { animation: partyDrift ease-in-out infinite; }
   </style>
@@ -391,7 +445,7 @@
           <span class="role-desc">PO · Stakeholder</span>
         </button>
       </div>
-      <button onclick="joinWithName()">Beitreten</button>
+      <button class="join-btn" onclick="joinWithName()">Beitreten</button>
     </div>
   </div>
 
@@ -408,7 +462,7 @@
   <!-- Main -->
   <main>
 
-    <!-- Cards (voters only) -->
+    <!-- Voter: card selection -->
     <div id="voterSection">
       <div class="section-label">Deine Schätzung</div>
       <div class="cards-grid" id="cardsGrid"></div>
@@ -434,14 +488,16 @@
       </div>
     </div>
 
-    <!-- Consensus banner -->
+    <!-- Consensus banner (fixed, not in flow) -->
     <div class="consensus-banner" id="consensusBanner">🎉 Konsens! Alle einig!</div>
 
+    <!-- Participants -->
     <div class="section-label">Teilnehmer</div>
     <div class="participants-grid" id="participantsGrid">
       <p class="waiting">Warte auf Teilnehmer…</p>
     </div>
 
+    <!-- Controls -->
     <div class="controls">
       <button class="btn btn-reveal" id="revealBtn" onclick="revealVotes()" disabled>
         Karten aufdecken
@@ -449,6 +505,12 @@
       <button class="btn btn-reset" onclick="resetVotes()">
         Neue Runde
       </button>
+    </div>
+
+    <!-- Reactions -->
+    <div class="reactions-section">
+      <div class="section-label">Reaktionen</div>
+      <div class="reaction-btns" id="reactionBtns"></div>
     </div>
 
   </main>
@@ -461,6 +523,18 @@
   <script>
     const CARDS = ['0', '1', '2', '3', '5', '8', '13', '21', '40', '?', '☕'];
 
+    const REACTIONS = [
+      { text: 'puhhh… schwieeerig 😓' },
+      { text: 'Ich brauche mehr Infos 🧐' },
+      { text: 'Das ist riesig! 😱' },
+      { text: 'Einfach, kein Aufwand 😎' },
+      { text: 'Können wir splitten? ✂️' },
+      { text: 'Kaffeepause bitte ☕' },
+      { text: 'Bin ich der Einzige? 🫠' },
+    ];
+    const REACTION_MUTED = { text: 'Ups, ich war gemutet 🔇', muted: true };
+
+    // ── URL params ────────────────────────────────────────
     const params  = new URLSearchParams(location.search);
     const roomId  = (params.get('room') || 'default').toLowerCase();
     const urlName = params.get('name') || '';
@@ -468,8 +542,8 @@
 
     let db, roomRef, participantRef;
     let userId, myName = '', myRole = 'voter', myVote = null;
-    let isRevealed = false, partyFired = false;
-    let overlayRole = 'voter';
+    let isRevealed = false, partyFired = false, overlayRole = 'voter';
+    let lastBubbleTs = 0, bubbleTimer = null;
 
     // ── Init ──────────────────────────────────────────────
     document.getElementById('displayRoomId').textContent = roomId;
@@ -480,7 +554,7 @@
     const stored = JSON.parse(localStorage.getItem(storageKey) || 'null');
     userId = stored?.id || Math.random().toString(36).substring(2, 12);
 
-    // Render card grid
+    // Build card grid
     const grid = document.getElementById('cardsGrid');
     CARDS.forEach(val => {
       const card = document.createElement('div');
@@ -491,20 +565,22 @@
       grid.appendChild(card);
     });
 
-    // Decide flow
+    // Decide whether to show overlay
     if (urlName && urlRole) {
-      myName = urlName;
-      myRole = urlRole;
+      myName = urlName; myRole = urlRole;
       hide('nameOverlay');
       enterRoom();
     } else if (stored?.name) {
-      myName = stored.name;
-      myRole = stored.role || 'voter';
+      myName = stored.name; myRole = stored.role || 'voter';
       hide('nameOverlay');
       enterRoom();
     } else {
       show('nameOverlay');
     }
+
+    document.getElementById('nameInput').addEventListener('keydown', e => {
+      if (e.key === 'Enter') joinWithName();
+    });
 
     // ── Overlay role picker ───────────────────────────────
     function setOverlayRole(role) {
@@ -513,15 +589,10 @@
       document.getElementById('overlay-observer').classList.toggle('active', role === 'observer');
     }
 
-    document.getElementById('nameInput').addEventListener('keydown', e => {
-      if (e.key === 'Enter') joinWithName();
-    });
-
     function joinWithName() {
       const val = document.getElementById('nameInput').value.trim();
       if (!val) return;
-      myName = val;
-      myRole = overlayRole;
+      myName = val; myRole = overlayRole;
       hide('nameOverlay');
       enterRoom();
     }
@@ -530,12 +601,9 @@
     function enterRoom() {
       localStorage.setItem(storageKey, JSON.stringify({ id: userId, name: myName, role: myRole }));
 
-      // Show/hide voter vs observer UI
       if (myRole === 'observer') {
         hide('voterSection');
         document.getElementById('observerNotice').classList.add('visible');
-      } else {
-        show('voterSection');
       }
 
       participantRef = db.ref(`rooms/${roomId}/participants/${userId}`);
@@ -547,12 +615,33 @@
         isRevealed = data.revealed || false;
         const participants = data.participants || {};
 
+        // ── Sync myVote with Firebase (handles remote reset) ──
+        const myData = participants[userId];
+        if (myData && !myData.vote && myVote) {
+          myVote = null;
+        }
+
         renderParticipants(participants);
         updateCardState();
         updateRevealBtn(participants);
+        renderReactions(participants);
+
+        // ── Auto-reveal when all voters have voted ──
+        if (!isRevealed) {
+          const voters = Object.values(participants).filter(p => p.role !== 'observer');
+          const allVoted = voters.length >= 1 && voters.every(p => p.vote);
+          if (allVoted) revealVotes();
+        }
 
         if (isRevealed) showResults(participants);
-        else hide('resultsBox');
+        else            hide('resultsBox');
+
+        // ── Speech bubbles ──
+        const bubble = data.bubble;
+        if (bubble && bubble.ts > lastBubbleTs) {
+          lastBubbleTs = bubble.ts;
+          showBubble(bubble);
+        }
       });
     }
 
@@ -583,23 +672,23 @@
       }
 
       entries.forEach(([uid, p]) => {
-        const hasVote = !!p.vote;
-        const isMe = uid === userId;
-        const isObserver = p.role === 'observer';
+        const hasVote   = !!p.vote;
+        const isMe      = uid === userId;
+        const isObs     = p.role === 'observer';
 
         const wrap = document.createElement('div');
         wrap.className = 'participant' +
-          (isObserver ? ' observer-card' : isRevealed ? ' revealed' : hasVote ? ' voted' : '');
+          (isObs ? ' observer-card' : isRevealed ? ' revealed' : hasVote ? ' voted' : '');
 
         const nameEl = document.createElement('div');
         nameEl.className = 'participant-name';
         nameEl.innerHTML = p.name + (isMe ? ' <em>(du)</em>' : '');
         wrap.appendChild(nameEl);
 
-        if (isObserver) {
+        if (isObs) {
           const badge = document.createElement('div');
           badge.className = 'observer-badge';
-          badge.innerHTML = '👁️ Beobachter';
+          badge.textContent = '👁️ Beobachter';
           wrap.appendChild(badge);
         } else {
           const voteEl = document.createElement('div');
@@ -613,25 +702,29 @@
       });
     }
 
-    // ── Reveal button (only voter votes count) ────────────
+    // ── Reveal button ─────────────────────────────────────
     function updateRevealBtn(participants) {
-      const voters = Object.values(participants).filter(p => p.role !== 'observer');
+      const voters  = Object.values(participants).filter(p => p.role !== 'observer');
       const anyVote = voters.some(p => p.vote);
       document.getElementById('revealBtn').disabled = !anyVote || isRevealed;
     }
 
-    // ── Results (voters only) ─────────────────────────────
+    // ── Results ───────────────────────────────────────────
     function showResults(participants) {
-      const voters = Object.values(participants).filter(p => p.role !== 'observer');
+      const voters   = Object.values(participants).filter(p => p.role !== 'observer');
       const allVotes = voters.map(p => p.vote).filter(Boolean);
-      const nums = allVotes.map(v => parseFloat(v)).filter(v => !isNaN(v));
+      const nums     = allVotes.map(v => parseFloat(v)).filter(v => !isNaN(v));
 
       show('resultsBox');
       document.getElementById('resultsBox').classList.add('visible');
 
-      document.getElementById('resultsAvg').textContent =
-        nums.length === 0 ? '—'
-        : (() => { const a = nums.reduce((s,v) => s+v, 0)/nums.length; return Number.isInteger(a) ? a : a.toFixed(1); })();
+      if (nums.length === 0) {
+        document.getElementById('resultsAvg').textContent = '—';
+      } else {
+        const avg = nums.reduce((s, v) => s + v, 0) / nums.length;
+        document.getElementById('resultsAvg').textContent =
+          Number.isInteger(avg) ? avg : avg.toFixed(1);
+      }
 
       const chips = document.getElementById('resultsVotes');
       chips.innerHTML = '';
@@ -649,7 +742,8 @@
     // ── Chart ─────────────────────────────────────────────
     function renderChart(voters) {
       const counts = {};
-      voters.map(p => p.vote).filter(Boolean).forEach(v => { counts[v] = (counts[v]||0)+1; });
+      voters.map(p => p.vote).filter(Boolean)
+            .forEach(v => { counts[v] = (counts[v] || 0) + 1; });
       const voted = CARDS.filter(c => counts[c]);
 
       const wrap = document.getElementById('chartWrap');
@@ -663,10 +757,10 @@
       let rects='', labels='', pts=[];
 
       voted.forEach((val, i) => {
-        const c = counts[val];
+        const c  = counts[val];
         const cx = PX + i*colW + colW/2;
         const bh = (c/maxC)*barH;
-        const by = PT + (barH-bh);
+        const by = PT + (barH - bh);
         rects  += `<rect x="${cx-colW*0.3}" y="${by}" width="${colW*0.6}" height="${bh}" rx="4" fill="#e94560" opacity="0.7"/>`;
         labels += `<text x="${cx}" y="${by-6}" text-anchor="middle" fill="#e94560" font-size="11" font-weight="600">${c}</text>`;
         labels += `<text x="${cx}" y="${H-4}" text-anchor="middle" fill="#94a3b8" font-size="12">${val}</text>`;
@@ -676,7 +770,8 @@
       const svg = document.getElementById('chartSvg');
       svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
       svg.innerHTML = rects + labels +
-        `<path d="${catmullRom(pts)}" fill="none" stroke="#e94560" stroke-width="2.5" stroke-opacity="0.45" stroke-linecap="round"/>` +
+        `<path d="${catmullRom(pts)}" fill="none" stroke="#e94560" stroke-width="2.5"
+          stroke-opacity="0.45" stroke-linecap="round"/>` +
         pts.map(([x,y]) => `<circle cx="${x}" cy="${y}" r="3.5" fill="#e94560"/>`).join('');
     }
 
@@ -685,13 +780,61 @@
       const p = [pts[0], ...pts, pts[pts.length-1]];
       let d = `M ${pts[0][0]} ${pts[0][1]}`;
       for (let i=1; i<p.length-2; i++) {
-        const cp1x = p[i][0]   + (p[i+1][0]-p[i-1][0])/6;
-        const cp1y = p[i][1]   + (p[i+1][1]-p[i-1][1])/6;
-        const cp2x = p[i+1][0] - (p[i+2][0]-p[i][0])/6;
-        const cp2y = p[i+1][1] - (p[i+2][1]-p[i][1])/6;
+        const cp1x = p[i][0]   + (p[i+1][0] - p[i-1][0]) / 6;
+        const cp1y = p[i][1]   + (p[i+1][1] - p[i-1][1]) / 6;
+        const cp2x = p[i+1][0] - (p[i+2][0] - p[i][0])   / 6;
+        const cp2y = p[i+1][1] - (p[i+2][1] - p[i][1])   / 6;
         d += ` C ${cp1x} ${cp1y} ${cp2x} ${cp2y} ${p[i+1][0]} ${p[i+1][1]}`;
       }
       return d;
+    }
+
+    // ── Reactions ─────────────────────────────────────────
+    function renderReactions(participants) {
+      const container = document.getElementById('reactionBtns');
+      container.innerHTML = '';
+
+      const voters    = Object.entries(participants).filter(([,p]) => p.role !== 'observer');
+      const nonVoters = voters.filter(([,p]) => !p.vote);
+      const showMuted = !isRevealed
+                     && myRole !== 'observer'
+                     && nonVoters.length === 1
+                     && nonVoters[0][0] === userId;
+
+      REACTIONS.forEach(r => {
+        container.appendChild(makeReactionBtn(r.text, false));
+      });
+
+      if (showMuted) {
+        container.appendChild(makeReactionBtn(REACTION_MUTED.text, true));
+      }
+    }
+
+    function makeReactionBtn(text, muted) {
+      const btn = document.createElement('button');
+      btn.className = 'reaction-btn' + (muted ? ' reaction-muted' : '');
+      btn.textContent = text;
+      btn.onclick = () => sendReaction(text);
+      return btn;
+    }
+
+    function sendReaction(text) {
+      roomRef.child('bubble').set({ text, author: myName, ts: Date.now() });
+    }
+
+    // ── Speech bubble ─────────────────────────────────────
+    function showBubble(bubble) {
+      document.querySelectorAll('.speech-bubble').forEach(b => b.remove());
+      if (bubbleTimer) clearTimeout(bubbleTimer);
+
+      const el = document.createElement('div');
+      el.className = 'speech-bubble';
+      el.innerHTML =
+        `<div class="bubble-author">${bubble.author} sagt:</div>` +
+        `<div class="bubble-text">${bubble.text}</div>`;
+      document.body.appendChild(el);
+
+      bubbleTimer = setTimeout(() => el.remove(), 5200);
     }
 
     // ── Consensus & party ─────────────────────────────────
@@ -714,14 +857,14 @@
         wrap.className = 'party-wrap party-drift';
         wrap.style.left = `${5 + Math.random()*90}%`;
         wrap.style.animationDuration = `${2 + Math.random()*2}s`;
-        wrap.style.animationDelay = `${i*0.12}s`;
+        wrap.style.animationDelay    = `${i*0.12}s`;
 
         const el = document.createElement('span');
         el.className = 'party-emoji';
         el.textContent = pool[i % pool.length];
-        el.style.fontSize = `${1.4 + Math.random()*1.2}rem`;
+        el.style.fontSize        = `${1.4 + Math.random()*1.2}rem`;
         el.style.animationDuration = `${2.2 + Math.random()*1.8}s`;
-        el.style.animationDelay = `${i*0.12}s`;
+        el.style.animationDelay    = `${i*0.12}s`;
 
         wrap.appendChild(el);
         document.body.appendChild(wrap);
@@ -730,18 +873,20 @@
     }
 
     // ── Controls ──────────────────────────────────────────
-    function revealVotes() { roomRef.update({ revealed: true }); }
+    function revealVotes() {
+      roomRef.update({ revealed: true });
+    }
 
     function resetVotes() {
+      // Clear all votes in Firebase → all clients sync via listener
       db.ref(`rooms/${roomId}/participants`).once('value', snap => {
         const updates = {};
         Object.keys(snap.val() || {}).forEach(uid => { updates[`${uid}/vote`] = null; });
         db.ref(`rooms/${roomId}/participants`).update(updates);
       });
       roomRef.update({ revealed: false });
-      myVote = null;
+      // myVote reset happens in the listener via Firebase sync
       partyFired = false;
-      updateCardState();
     }
 
     function copyLink() {
