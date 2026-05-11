@@ -422,6 +422,17 @@
     .party-wrap  { position: fixed; bottom: -60px; pointer-events: none; z-index: 400; }
     .party-emoji { animation: partyRise linear forwards; display: block; }
     .party-drift { animation: partyDrift ease-in-out infinite; }
+
+    .version {
+      position: fixed;
+      bottom: 12px;
+      left: 16px;
+      font-size: 0.7rem;
+      color: #cbd5e0;
+      pointer-events: none;
+      user-select: none;
+      z-index: 10;
+    }
   </style>
 </head>
 <body>
@@ -902,5 +913,6 @@
     function hide(id) { document.getElementById(id).style.display = 'none'; }
   </script>
 
+  <div class="version">v1.5</div>
 </body>
 </html>

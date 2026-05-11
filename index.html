@@ -19,9 +19,30 @@
       padding: 20px;
     }
 
-    .logo { font-size: 3rem; margin-bottom: 12px; }
     h1 { font-size: 2rem; color: #0f172a; margin-bottom: 6px; }
-    .subtitle { color: #64748b; margin-bottom: 48px; font-size: 0.95rem; }
+    .subtitle { color: #64748b; margin-bottom: 32px; font-size: 0.95rem; }
+
+    .hero-img {
+      width: 220px;
+      height: 220px;
+      object-fit: contain;
+      border-radius: 16px;
+      margin-bottom: 6px;
+      display: block;
+    }
+    .image-credit { font-size: 0.7rem; color: #cbd5e0; margin-bottom: 20px; }
+    .image-credit a { color: #cbd5e0; text-decoration: none; }
+    .image-credit a:hover { color: #94a3b8; }
+
+    .version {
+      position: fixed;
+      bottom: 12px;
+      left: 16px;
+      font-size: 0.7rem;
+      color: #cbd5e0;
+      pointer-events: none;
+      user-select: none;
+    }
 
     .panel {
       background: #fff;
@@ -103,7 +124,8 @@
 </head>
 <body>
 
-  <div class="logo">🃏</div>
+  <img id="heroImg" class="hero-img" src="" alt="Illustration by Twonks">
+  <div class="image-credit"><a href="https://www.twonks.co.uk" target="_blank">Illustration: twonks.co.uk</a></div>
   <h1>Planning Poker</h1>
   <p class="subtitle">Schätzungen im Team – einfach &amp; live</p>
 
@@ -175,6 +197,21 @@
       location.href = `room.html?room=${encodeURIComponent(code)}&name=${encodeURIComponent(name)}&role=${roles.join}`;
     }
 
+    const TWONKS = [
+      'https://static.wixstatic.com/media/e6db62_2ada3b66cfb947ada9aaeec9214f3ab2~mv2.png',
+      'https://static.wixstatic.com/media/e6db62_0e89ee9bafbd4ee79fe672f09b096c68~mv2.png',
+      'https://static.wixstatic.com/media/e6db62_ed39c82369f240c4bb79bc0752121083~mv2.png',
+      'https://static.wixstatic.com/media/e6db62_e2bbc426473f41e1a4933289ff988d8e~mv2.png',
+      'https://static.wixstatic.com/media/e6db62_b7102758d8a74856a999c73c0c877ae2~mv2.png',
+      'https://static.wixstatic.com/media/e6db62_1252ae0d05424e33ac3c2227ff353e25~mv2.png',
+      'https://static.wixstatic.com/media/e6db62_2dc636e1d8e64358a4f8c93ddc24ce8b~mv2.png',
+      'https://static.wixstatic.com/media/e6db62_9bb10dbdc46e47dca019cd7f2db95095~mv2.png',
+      'https://static.wixstatic.com/media/e6db62_803663fa0e864a25a9d2e222694389c1~mv2.png',
+      'https://static.wixstatic.com/media/e6db62_9c348a9dc6394e48918da48630705807~mv2.png',
+      'https://static.wixstatic.com/media/e6db62_23f53fdc4aba49808910533953dccb9a~mv2.png',
+    ];
+    document.getElementById('heroImg').src = TWONKS[Math.floor(Math.random() * TWONKS.length)];
+
     document.addEventListener('keydown', e => {
       if (e.key !== 'Enter') return;
       const id = document.activeElement?.id;
@@ -183,5 +220,6 @@
     });
   </script>
 
+  <div class="version">v1.5</div>
 </body>
 </html>
