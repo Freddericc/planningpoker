@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Planning Poker – Raum</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #1a1a2e;
+      color: #e0e0e0;
+      min-height: 100vh;
+    }
+
+    /* ── Header ── */
+    header {
+      background: #16213e;
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid #0f3460;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .header-logo { font-size: 1.2rem; font-weight: 700; color: #fff; }
+    .header-right { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .room-label { color: #555; font-size: 0.85rem; }
+    .room-code {
+      background: #0f3460;
+      padding: 4px 14px;
+      border-radius: 6px;
+      font-family: monospace;
+      font-size: 0.95rem;
+      color: #e0e0e0;
+    }
+    .copy-btn {
+      background: transparent;
+      border: 1px solid #2a4a6a;
+      color: #aaa;
+      padding: 5px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      transition: all 0.15s;
+    }
+    .copy-btn:hover { background: #1e4a7a; color: #fff; }
+
+    /* ── Main layout ── */
+    main {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 36px 20px 60px;
+    }
+
+    .section-label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #555;
+      margin-bottom: 14px;
+    }
+
+    /* ── Poker cards ── */
+    .cards-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 40px;
+    }
+
+    .poker-card {
+      width: 62px;
+      height: 88px;
+      background: #16213e;
+      border: 2px solid #1e4a7a;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: #c0c0c0;
+      cursor: pointer;
+      transition: all 0.15s;
+      user-select: none;
+    }
+    .poker-card:hover {
+      border-color: #e94560;
+      color: #e94560;
+      transform: translateY(-6px);
+    }
+    .poker-card.selected {
+      background: #e94560;
+      border-color: #e94560;
+      color: #fff;
+      transform: translateY(-10px);
+      box-shadow: 0 8px 24px rgba(233, 69, 96, 0.45);
+    }
+    .poker-card.disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+      transform: none !important;
+    }
+
+    /* ── Results ── */
+    .results-box {
+      background: #16213e;
+      border: 1px solid #1e4a7a;
+      border-radius: 12px;
+      padding: 20px 28px;
+      margin-bottom: 36px;
+      display: none;
+      animation: fadeIn 0.3s ease;
+    }
+    .results-box.visible { display: block; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: none; } }
+
+    .results-avg { font-size: 3rem; font-weight: 700; color: #e94560; line-height: 1; }
+    .results-unit { font-size: 0.85rem; color: #555; margin-top: 4px; }
+    .results-votes { margin-top: 12px; display: flex; flex-wrap: wrap; gap: 8px; }
+    .vote-chip {
+      background: #0f3460;
+      border-radius: 6px;
+      padding: 4px 10px;
+      font-size: 0.85rem;
+      color: #bbb;
+    }
+    .vote-chip strong { color: #fff; }
+
+    /* ── Participants ── */
+    .participants-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      margin-bottom: 36px;
+      min-height: 110px;
+    }
+
+    .participant {
+      background: #16213e;
+      border: 1px solid #1e4a7a;
+      border-radius: 12px;
+      padding: 16px 14px;
+      min-width: 120px;
+      text-align: center;
+      transition: border-color 0.2s;
+    }
+    .participant.voted { border-color: #2a6a3a; }
+    .participant.revealed { border-color: #e94560; }
+
+    .participant-name {
+      font-size: 0.85rem;
+      color: #999;
+      margin-bottom: 12px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 110px;
+    }
+    .participant-name em { color: #e94560; font-style: normal; font-size: 0.75rem; }
+
+    .vote-card {
+      width: 48px;
+      height: 66px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto;
+      font-size: 1.2rem;
+      font-weight: 700;
+      border: 2px solid #1e4a7a;
+      background: #0f3460;
+      color: #444;
+      transition: all 0.25s;
+    }
+    .vote-card.voted {
+      border-color: #2a6a3a;
+      background: #1a3a22;
+      color: #4caf50;
+      font-size: 1rem;
+    }
+    .vote-card.revealed {
+      border-color: #e94560;
+      background: #e94560;
+      color: #fff;
+    }
+
+    /* ── Controls ── */
+    .controls { display: flex; gap: 12px; flex-wrap: wrap; }
+
+    .btn {
+      padding: 12px 30px;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .btn-reveal { background: #e94560; color: #fff; }
+    .btn-reveal:hover:not(:disabled) { background: #c73652; }
+    .btn-reset { background: #0f3460; color: #e0e0e0; border: 1px solid #1e4a7a; }
+    .btn-reset:hover { background: #1e4a7a; }
+    .btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+    /* ── Name overlay ── */
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.85);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 200;
+    }
+    .dialog {
+      background: #16213e;
+      border-radius: 16px;
+      padding: 40px 36px;
+      width: 100%;
+      max-width: 360px;
+      text-align: center;
+    }
+    .dialog .icon { font-size: 2.5rem; margin-bottom: 16px; }
+    .dialog h2 { color: #fff; margin-bottom: 6px; }
+    .dialog p { color: #666; font-size: 0.9rem; margin-bottom: 24px; }
+    .dialog input {
+      width: 100%;
+      padding: 12px 16px;
+      background: #0f3460;
+      border: 1px solid #1e4a7a;
+      border-radius: 8px;
+      color: #fff;
+      font-size: 1rem;
+      margin-bottom: 14px;
+      outline: none;
+    }
+    .dialog input:focus { border-color: #e94560; }
+    .dialog input::placeholder { color: #3a5a80; }
+    .dialog button {
+      width: 100%;
+      padding: 13px;
+      background: #e94560;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .dialog button:hover { background: #c73652; }
+
+    .waiting {
+      color: #444;
+      font-size: 0.9rem;
+      margin-top: 32px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Name dialog -->
+  <div class="overlay" id="nameOverlay">
+    <div class="dialog">
+      <div class="icon">🃏</div>
+      <h2>Raum beitreten</h2>
+      <p>Wie soll dein Name im Raum erscheinen?</p>
+      <input type="text" id="nameInput" placeholder="Dein Name" maxlength="30" autofocus>
+      <button onclick="joinWithName()">Beitreten</button>
+    </div>
+  </div>
+
+  <!-- Header -->
+  <header>
+    <div class="header-logo">🃏 Planning Poker</div>
+    <div class="header-right">
+      <span class="room-label">Raum</span>
+      <span class="room-code" id="displayRoomId">—</span>
+      <button class="copy-btn" id="copyBtn" onclick="copyLink()">🔗 Link kopieren</button>
+    </div>
+  </header>
+
+  <!-- Main -->
+  <main>
+
+    <div class="section-label">Deine Schätzung</div>
+    <div class="cards-grid" id="cardsGrid"></div>
+
+    <div class="results-box" id="resultsBox">
+      <div class="section-label" style="margin-bottom:10px">Ergebnis</div>
+      <div class="results-avg" id="resultsAvg">—</div>
+      <div class="results-unit">Durchschnitt</div>
+      <div class="results-votes" id="resultsVotes"></div>
+    </div>
+
+    <div class="section-label">Teilnehmer</div>
+    <div class="participants-grid" id="participantsGrid">
+      <p class="waiting">Warte auf Teilnehmer…</p>
+    </div>
+
+    <div class="controls">
+      <button class="btn btn-reveal" id="revealBtn" onclick="revealVotes()" disabled>
+        Karten aufdecken
+      </button>
+      <button class="btn btn-reset" onclick="resetVotes()">
+        Neue Runde
+      </button>
+    </div>
+
+  </main>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+  <script src="firebase-config.js"></script>
+
+  <script>
+    const CARDS = ['0', '1', '2', '3', '5', '8', '13', '21', '40', '?', '☕'];
+
+    const params   = new URLSearchParams(window.location.search);
+    const roomId   = (params.get('room') || 'default').toLowerCase();
+    const urlName  = params.get('name') || '';
+
+    let db, roomRef, participantRef;
+    let userId, myName = '', myVote = null, isRevealed = false;
+
+    // ── Init ──────────────────────────────────────────────
+    document.getElementById('displayRoomId').textContent = roomId;
+    db = firebase.database();
+    roomRef = db.ref(`rooms/${roomId}`);
+
+    // Restore or create persistent user ID for this room
+    const storageKey = `pp_${roomId}`;
+    const stored = JSON.parse(localStorage.getItem(storageKey) || 'null');
+    userId = stored?.id || Math.random().toString(36).substring(2, 12);
+
+    // Render card grid
+    const grid = document.getElementById('cardsGrid');
+    CARDS.forEach(val => {
+      const card = document.createElement('div');
+      card.className = 'poker-card';
+      card.textContent = val;
+      card.dataset.val = val;
+      card.onclick = () => selectCard(val);
+      grid.appendChild(card);
+    });
+
+    // Decide whether to show name dialog
+    if (urlName) {
+      myName = urlName;
+      hide('nameOverlay');
+      enterRoom();
+    } else if (stored?.name) {
+      myName = stored.name;
+      hide('nameOverlay');
+      enterRoom();
+    } else {
+      show('nameOverlay');
+    }
+
+    document.getElementById('nameInput').addEventListener('keydown', e => {
+      if (e.key === 'Enter') joinWithName();
+    });
+
+    function joinWithName() {
+      const val = document.getElementById('nameInput').value.trim();
+      if (!val) return;
+      myName = val;
+      hide('nameOverlay');
+      enterRoom();
+    }
+
+    // ── Room ─────────────────────────────────────────────
+    function enterRoom() {
+      localStorage.setItem(storageKey, JSON.stringify({ id: userId, name: myName }));
+
+      participantRef = db.ref(`rooms/${roomId}/participants/${userId}`);
+      participantRef.onDisconnect().remove();
+      participantRef.set({ name: myName, vote: null });
+
+      roomRef.on('value', snap => {
+        const data = snap.val() || {};
+        isRevealed = data.revealed || false;
+        const participants = data.participants || {};
+
+        renderParticipants(participants);
+        updateCardState();
+        updateRevealBtn(participants);
+
+        if (isRevealed) showResults(participants);
+        else hide('resultsBox');
+      });
+    }
+
+    // ── Card selection ────────────────────────────────────
+    function selectCard(val) {
+      if (isRevealed) return;
+      if (myVote === val) {
+        myVote = null;
+        participantRef.update({ vote: null });
+      } else {
+        myVote = val;
+        participantRef.update({ vote: val });
+      }
+      updateCardState();
+    }
+
+    function updateCardState() {
+      document.querySelectorAll('.poker-card').forEach(c => {
+        c.classList.toggle('selected', c.dataset.val === myVote);
+        c.classList.toggle('disabled', isRevealed);
+      });
+    }
+
+    // ── Participants ──────────────────────────────────────
+    function renderParticipants(participants) {
+      const pgrid = document.getElementById('participantsGrid');
+      pgrid.innerHTML = '';
+
+      const entries = Object.entries(participants);
+      if (entries.length === 0) {
+        pgrid.innerHTML = '<p class="waiting">Warte auf Teilnehmer…</p>';
+        return;
+      }
+
+      entries.forEach(([uid, p]) => {
+        const hasVote = !!p.vote;
+        const isMe = uid === userId;
+
+        const wrap = document.createElement('div');
+        wrap.className = 'participant' + (isRevealed ? ' revealed' : hasVote ? ' voted' : '');
+
+        const nameEl = document.createElement('div');
+        nameEl.className = 'participant-name';
+        nameEl.innerHTML = p.name + (isMe ? ' <em>(du)</em>' : '');
+
+        const voteEl = document.createElement('div');
+        voteEl.className = 'vote-card' + (isRevealed ? ' revealed' : hasVote ? ' voted' : '');
+
+        if (isRevealed) {
+          voteEl.textContent = p.vote || '—';
+        } else if (hasVote) {
+          voteEl.textContent = '✓';
+        } else {
+          voteEl.textContent = '…';
+        }
+
+        wrap.appendChild(nameEl);
+        wrap.appendChild(voteEl);
+        pgrid.appendChild(wrap);
+      });
+    }
+
+    // ── Reveal button ─────────────────────────────────────
+    function updateRevealBtn(participants) {
+      const btn = document.getElementById('revealBtn');
+      const anyVote = Object.values(participants).some(p => p.vote);
+      btn.disabled = !anyVote || isRevealed;
+    }
+
+    // ── Results ───────────────────────────────────────────
+    function showResults(participants) {
+      const allVotes = Object.values(participants).map(p => p.vote).filter(Boolean);
+      const nums = allVotes.map(v => parseFloat(v)).filter(v => !isNaN(v));
+
+      document.getElementById('resultsBox').classList.add('visible');
+      show('resultsBox');
+
+      if (nums.length === 0) {
+        document.getElementById('resultsAvg').textContent = '—';
+      } else {
+        const avg = nums.reduce((a, b) => a + b, 0) / nums.length;
+        document.getElementById('resultsAvg').textContent =
+          Number.isInteger(avg) ? avg : avg.toFixed(1);
+      }
+
+      const chips = document.getElementById('resultsVotes');
+      chips.innerHTML = '';
+      Object.values(participants).forEach(p => {
+        const chip = document.createElement('div');
+        chip.className = 'vote-chip';
+        chip.innerHTML = `<strong>${p.vote || '—'}</strong> ${p.name}`;
+        chips.appendChild(chip);
+      });
+    }
+
+    // ── Controls ──────────────────────────────────────────
+    function revealVotes() {
+      roomRef.update({ revealed: true });
+    }
+
+    function resetVotes() {
+      db.ref(`rooms/${roomId}/participants`).once('value', snap => {
+        const updates = {};
+        Object.keys(snap.val() || {}).forEach(uid => {
+          updates[`${uid}/vote`] = null;
+        });
+        db.ref(`rooms/${roomId}/participants`).update(updates);
+      });
+      roomRef.update({ revealed: false });
+      myVote = null;
+      updateCardState();
+    }
+
+    function copyLink() {
+      const url = `${location.origin}${location.pathname.replace('room.html','')}room.html?room=${roomId}`;
+      navigator.clipboard.writeText(url).then(() => {
+        const btn = document.getElementById('copyBtn');
+        btn.textContent = '✓ Kopiert!';
+        setTimeout(() => { btn.textContent = '🔗 Link kopieren'; }, 2000);
+      });
+    }
+
+    // ── Helpers ───────────────────────────────────────────
+    function show(id) { document.getElementById(id).style.display = ''; }
+    function hide(id) { document.getElementById(id).style.display = 'none'; }
+  </script>
+
+</body>
+</html>
