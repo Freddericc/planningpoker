@@ -587,7 +587,7 @@
     let db, roomRef, participantRef;
     let userId, myName = '', myRole = 'voter', myAvatar = '😎', myVote = null;
     let isRevealed = false, partyFired = false, overlayRole = 'voter', overlayAvatar = '😎';
-    let lastBubbleTs = 0, bubbleTimer = null;
+    let lastBubbleTs = 0, bubbleTimer = null, firstUpdate = true;
 
     // ── Init ──────────────────────────────────────────────
     document.getElementById('displayRoomId').textContent = roomId;
@@ -609,7 +609,6 @@
       grid.appendChild(card);
     });
 
-    // Decide whether to show overlay
     if (urlName && urlRole) {
       myName = urlName; myRole = urlRole; myAvatar = urlAvatar || '😎';
       hide('nameOverlay');
@@ -676,31 +675,33 @@
         const data = snap.val() || {};
         isRevealed = data.revealed || false;
         const participants = data.participants || {};
+        const voterEntries = Object.entries(participants).filter(([,p]) => p.role !== 'observer');
+        const voters = voterEntries.map(([,p]) => p);
 
         // ── Sync myVote with Firebase (handles remote reset) ──
         const myData = participants[userId];
-        if (myData && !myData.vote && myVote) {
-          myVote = null;
-        }
+        if (myData && !myData.vote && myVote) myVote = null;
 
         renderParticipants(participants);
         updateCardState();
-        updateRevealBtn(participants);
-        renderReactions(participants);
+        updateRevealBtn(voters);
+        renderReactions(voterEntries);
 
         // ── Auto-reveal when all voters have voted ──
         if (!isRevealed) {
-          const voters = Object.values(participants).filter(p => p.role !== 'observer');
           const allVoted = voters.length >= 1 && voters.every(p => p.vote);
           if (allVoted) revealVotes();
         }
 
-        if (isRevealed) showResults(participants);
-        else            hide('resultsBox');
+        if (isRevealed) showResults(voters);
+        else            document.getElementById('resultsBox').classList.remove('visible');
 
-        // ── Speech bubbles ──
+        // ── Speech bubbles (skip stale on rejoin) ──
         const bubble = data.bubble;
-        if (bubble && bubble.ts > lastBubbleTs) {
+        if (firstUpdate) {
+          lastBubbleTs = bubble?.ts || 0;
+          firstUpdate = false;
+        } else if (bubble && bubble.ts > lastBubbleTs) {
           lastBubbleTs = bubble.ts;
           showBubble(bubble);
         }
@@ -772,19 +773,16 @@
     }
 
     // ── Reveal button ─────────────────────────────────────
-    function updateRevealBtn(participants) {
-      const voters  = Object.values(participants).filter(p => p.role !== 'observer');
+    function updateRevealBtn(voters) {
       const anyVote = voters.some(p => p.vote);
       document.getElementById('revealBtn').disabled = !anyVote || isRevealed;
     }
 
     // ── Results ───────────────────────────────────────────
-    function showResults(participants) {
-      const voters   = Object.values(participants).filter(p => p.role !== 'observer');
+    function showResults(voters) {
       const allVotes = voters.map(p => p.vote).filter(Boolean);
       const nums     = allVotes.map(v => parseFloat(v)).filter(v => !isNaN(v));
 
-      show('resultsBox');
       document.getElementById('resultsBox').classList.add('visible');
 
       if (nums.length === 0) {
@@ -859,12 +857,11 @@
     }
 
     // ── Reactions ─────────────────────────────────────────
-    function renderReactions(participants) {
+    function renderReactions(voterEntries) {
       const container = document.getElementById('reactionBtns');
       container.innerHTML = '';
 
-      const voters    = Object.entries(participants).filter(([,p]) => p.role !== 'observer');
-      const nonVoters = voters.filter(([,p]) => !p.vote);
+      const nonVoters = voterEntries.filter(([,p]) => !p.vote);
       const showMuted = !isRevealed
                      && myRole !== 'observer'
                      && nonVoters.length === 1
@@ -921,7 +918,7 @@
       setTimeout(() => banner.classList.remove('show'), 3500);
 
       const pool = ['🎉','🎊','✨','🥳','🎈'];
-      Array.from({length: 20}, (_, i) => {
+      for (let i = 0; i < 20; i++) {
         const wrap = document.createElement('div');
         wrap.className = 'party-wrap party-drift';
         wrap.style.left = `${5 + Math.random()*90}%`;
@@ -931,14 +928,14 @@
         const el = document.createElement('span');
         el.className = 'party-emoji';
         el.textContent = pool[i % pool.length];
-        el.style.fontSize        = `${1.4 + Math.random()*1.2}rem`;
+        el.style.fontSize          = `${1.4 + Math.random()*1.2}rem`;
         el.style.animationDuration = `${2.2 + Math.random()*1.8}s`;
         el.style.animationDelay    = `${i*0.12}s`;
 
         wrap.appendChild(el);
         document.body.appendChild(wrap);
         setTimeout(() => wrap.remove(), 5500);
-      });
+      }
     }
 
     // ── Controls ──────────────────────────────────────────
@@ -971,6 +968,6 @@
     function hide(id) { document.getElementById(id).style.display = 'none'; }
   </script>
 
-  <div class="version">v1.7</div>
+  <div class="version">v1.9</div>
 </body>
 </html>

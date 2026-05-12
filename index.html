@@ -68,7 +68,7 @@
       letter-spacing: 0;
     }
 
-    input, select {
+    input {
       width: 100%;
       padding: 11px 16px;
       background: #f8fafc;
@@ -80,10 +80,8 @@
       transition: border-color 0.2s, background 0.2s;
       appearance: none;
     }
-    input:focus, select:focus { border-color: #e94560; background: #fff; }
+    input:focus { border-color: #e94560; background: #fff; }
     input::placeholder { color: #94a3b8; }
-    select { cursor: pointer; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2394a3b8' d='M6 8L1 3h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; padding-right: 36px; }
-    select option { font-size: 0.9rem; }
 
     /* Avatar grid */
     .avatar-grid {
@@ -171,22 +169,8 @@
   <div class="panel">
 
     <div class="field">
-      <div class="field-label">Stereotyp <span class="optional-badge">optional</span></div>
-      <select id="stereotype" onchange="applyStereotype()">
-        <option value="">— Eigener Name & Avatar —</option>
-        <option value="📈|Story-Point-Maximierer*in">📈  Story-Point-Maximierer*in</option>
-        <option value="🔍|Detail-Versunkene*r">🔍  Detail-Versunkene*r</option>
-        <option value="🕵️|Abhängigkeiten-Jäger*in">🕵️  Abhängigkeiten-Jäger*in</option>
-        <option value="🤫|Stille Genießer*in">🤫  Stille Genießer*in</option>
-        <option value="🏛️|Das-haben-wir-schon-immer-so-gemacht-Typ">🏛️  Das-haben-wir-schon-immer-so-gemacht-Typ</option>
-        <option value="⚡|Spontan-Architekt">⚡  Spontan-Architekt</option>
-      </select>
-    </div>
-
-    <div class="field">
       <div class="field-label">Name</div>
-      <input type="text" id="name" placeholder="Dein Name" maxlength="30"
-             oninput="document.getElementById('stereotype').value = ''">
+      <input type="text" id="name" placeholder="Dein Name" maxlength="30">
     </div>
 
     <div class="field">
@@ -220,7 +204,7 @@
 
   </div>
 
-  <div class="version">v1.7</div>
+  <div class="version">v1.9</div>
 
   <script>
     // ── Avatars ───────────────────────────────────────────
@@ -229,15 +213,6 @@
       '🧙','😈','👾','🤖','🦊','🦄','🐱','🚀',
       '📈','🔍','🕵️','🤫','🏛️','⚡',
     ];
-
-    const STEREOTYPES = {
-      '📈': 'Story-Point-Maximierer*in',
-      '🔍': 'Detail-Versunkene*r',
-      '🕵️': 'Abhängigkeiten-Jäger*in',
-      '🤫': 'Stille Genießer*in',
-      '🏛️': 'Das-haben-wir-schon-immer-so-gemacht-Typ',
-      '⚡':  'Spontan-Architekt',
-    };
 
     let selectedAvatar = AVATARS[0];
     let selectedRole   = 'voter';
@@ -258,14 +233,6 @@
       document.querySelectorAll('.avatar-btn').forEach(b => {
         b.classList.toggle('selected', b.textContent === emoji);
       });
-    }
-
-    function applyStereotype() {
-      const val = document.getElementById('stereotype').value;
-      if (!val) return;
-      const [emoji, name] = val.split('|');
-      document.getElementById('name').value = name;
-      selectAvatar(emoji);
     }
 
     function setRole(role) {
@@ -305,7 +272,7 @@
     document.getElementById('heroImg').src = TWONKS[Math.floor(Math.random() * TWONKS.length)];
 
     document.addEventListener('keydown', e => {
-      if (e.key === 'Enter' && document.activeElement?.id !== 'stereotype') enter();
+      if (e.key === 'Enter') enter();
     });
   </script>
 
