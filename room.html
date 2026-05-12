@@ -216,7 +216,7 @@
       0%, 100% { box-shadow: 0 0 0 2px rgba(245,158,11,0.25); }
       50%       { box-shadow: 0 0 0 8px rgba(245,158,11,0.55); }
     }
-    .vote-card.changed  { border-color: #f59e0b; background: #f59e0b; color: #fff; animation: votePulse 1s ease-in-out infinite; }
+    .vote-card.changed  { border-color: #f59e0b; background: #f59e0b; color: #fff; animation: votePulse 1s ease-in-out 5; }
     .p-avatar { font-size: 1.8rem; margin-bottom: 4px; line-height: 1; }
 
     .ov-avatar-grid {
@@ -593,7 +593,8 @@
     let userId, myName = '', myRole = 'voter', myAvatar = '😎', myVote = null;
     let isRevealed = false, partyFired = false, overlayRole = 'voter', overlayAvatar = '😎';
     let lastBubbleTs = 0, bubbleTimer = null, firstUpdate = true;
-    let changedVoters = new Set(), prevVotes = {};
+    let changedVoters = new Map(), prevVotes = {};
+    let partyWraps = [], bannerTimer = null;
 
     // ── Init ──────────────────────────────────────────────
     document.getElementById('displayRoomId').textContent = roomId;
@@ -692,7 +693,7 @@
         if (isRevealed) {
           Object.entries(participants).forEach(([uid, p]) => {
             if (p.role === 'observer') return;
-            if (uid in prevVotes && prevVotes[uid] !== p.vote) changedVoters.add(uid);
+            if (uid in prevVotes && prevVotes[uid] !== p.vote) changedVoters.set(uid, Date.now());
           });
         } else {
           changedVoters.clear();
@@ -778,7 +779,8 @@
           badge.textContent = '👁️ Beobachter';
           wrap.appendChild(badge);
         } else {
-          const isChanged = isRevealed && changedVoters.has(uid);
+          const changedAt = changedVoters.get(uid);
+          const isChanged = isRevealed && changedAt !== undefined && (Date.now() - changedAt < 5000);
           const voteEl = document.createElement('div');
           voteEl.className = 'vote-card' +
             (isChanged ? ' changed' : isRevealed ? ' revealed' : hasVote ? ' voted' : '');
@@ -822,6 +824,7 @@
 
       renderChart(voters);
       if (checkConsensus(voters)) triggerParty();
+      else clearParty();
     }
 
     // ── Chart ─────────────────────────────────────────────
@@ -933,8 +936,9 @@
 
       const banner = document.getElementById('consensusBanner');
       banner.classList.add('show');
-      setTimeout(() => banner.classList.remove('show'), 3500);
+      bannerTimer = setTimeout(() => banner.classList.remove('show'), 3500);
 
+      partyWraps = [];
       const pool = ['🎉','🎊','✨','🥳','🎈'];
       for (let i = 0; i < 20; i++) {
         const wrap = document.createElement('div');
@@ -952,8 +956,18 @@
 
         wrap.appendChild(el);
         document.body.appendChild(wrap);
-        setTimeout(() => wrap.remove(), 5500);
+        partyWraps.push(wrap);
+        setTimeout(() => { wrap.remove(); partyWraps = partyWraps.filter(w => w !== wrap); }, 5500);
       }
+    }
+
+    function clearParty() {
+      if (!partyFired) return;
+      partyFired = false;
+      clearTimeout(bannerTimer);
+      document.getElementById('consensusBanner').classList.remove('show');
+      partyWraps.forEach(w => w.remove());
+      partyWraps = [];
     }
 
     // ── Controls ──────────────────────────────────────────
@@ -970,7 +984,7 @@
       });
       roomRef.update({ revealed: false });
       // myVote reset happens in the listener via Firebase sync
-      partyFired = false;
+      clearParty();
     }
 
     function copyLink() {
