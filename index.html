@@ -20,11 +20,11 @@
     }
 
     h1 { font-size: 2rem; color: #0f172a; margin-bottom: 6px; }
-    .subtitle { color: #64748b; margin-bottom: 32px; font-size: 0.95rem; }
+    .subtitle { color: #64748b; margin-bottom: 28px; font-size: 0.95rem; }
 
     .hero-img {
-      width: 200px;
-      height: 200px;
+      width: 270px;
+      height: 270px;
       object-fit: contain;
       border-radius: 16px;
       margin-bottom: 6px;
@@ -37,25 +37,25 @@
     .panel {
       background: #fff;
       border-radius: 16px;
-      padding: 32px;
+      padding: 28px;
       width: 100%;
-      max-width: 400px;
+      max-width: 420px;
       box-shadow: 0 1px 3px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.04);
       border: 1px solid #e2e8f0;
     }
 
-    .field { margin-bottom: 12px; }
+    .field { margin-bottom: 14px; }
 
     .field-label {
       display: flex;
       align-items: center;
       gap: 6px;
-      font-size: 0.75rem;
+      font-size: 0.72rem;
       font-weight: 600;
       color: #64748b;
       margin-bottom: 6px;
       text-transform: uppercase;
-      letter-spacing: 0.05em;
+      letter-spacing: 0.06em;
     }
     .optional-badge {
       font-size: 0.65rem;
@@ -68,20 +68,47 @@
       letter-spacing: 0;
     }
 
-    input {
+    input, select {
       width: 100%;
       padding: 11px 16px;
       background: #f8fafc;
       border: 1.5px solid #e2e8f0;
       border-radius: 8px;
       color: #0f172a;
-      font-size: 1rem;
+      font-size: 0.95rem;
       outline: none;
       transition: border-color 0.2s, background 0.2s;
+      appearance: none;
     }
-    input:focus { border-color: #e94560; background: #fff; }
+    input:focus, select:focus { border-color: #e94560; background: #fff; }
     input::placeholder { color: #94a3b8; }
+    select { cursor: pointer; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2394a3b8' d='M6 8L1 3h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; padding-right: 36px; }
+    select option { font-size: 0.9rem; }
 
+    /* Avatar grid */
+    .avatar-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .avatar-btn {
+      width: 38px;
+      height: 38px;
+      border-radius: 8px;
+      border: 2px solid #e2e8f0;
+      background: #f8fafc;
+      font-size: 1.25rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.12s;
+      line-height: 1;
+    }
+    .avatar-btn:hover { border-color: #e94560; transform: scale(1.12); }
+    .avatar-btn.selected { border-color: #e94560; background: #fff5f7; box-shadow: 0 0 0 3px rgba(233,69,96,0.15); }
+
+    /* Role picker */
     .role-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -144,16 +171,34 @@
   <div class="panel">
 
     <div class="field">
+      <div class="field-label">Stereotyp <span class="optional-badge">optional</span></div>
+      <select id="stereotype" onchange="applyStereotype()">
+        <option value="">— Eigener Name & Avatar —</option>
+        <option value="📈|Story-Point-Maximierer*in">📈  Story-Point-Maximierer*in</option>
+        <option value="🔍|Detail-Versunkene*r">🔍  Detail-Versunkene*r</option>
+        <option value="🕵️|Abhängigkeiten-Jäger*in">🕵️  Abhängigkeiten-Jäger*in</option>
+        <option value="🤫|Stille Genießer*in">🤫  Stille Genießer*in</option>
+        <option value="🏛️|Das-haben-wir-schon-immer-so-gemacht-Typ">🏛️  Das-haben-wir-schon-immer-so-gemacht-Typ</option>
+        <option value="⚡|Spontan-Architekt">⚡  Spontan-Architekt</option>
+      </select>
+    </div>
+
+    <div class="field">
       <div class="field-label">Name</div>
-      <input type="text" id="name" placeholder="Dein Name" maxlength="30" autofocus>
+      <input type="text" id="name" placeholder="Dein Name" maxlength="30"
+             oninput="document.getElementById('stereotype').value = ''">
+    </div>
+
+    <div class="field">
+      <div class="field-label">Avatar</div>
+      <div class="avatar-grid" id="avatarGrid"></div>
     </div>
 
     <div class="field">
       <div class="field-label">
-        Raum-Code
-        <span class="optional-badge">optional</span>
+        Raum-Code <span class="optional-badge">optional – leer = neuer Raum</span>
       </div>
-      <input type="text" id="roomCode" placeholder="Leer lassen = neuer Raum" maxlength="30">
+      <input type="text" id="roomCode" placeholder="z.B. sprint42" maxlength="30">
     </div>
 
     <div class="field-label" style="margin-bottom:8px">Rolle</div>
@@ -175,10 +220,53 @@
 
   </div>
 
-  <div class="version">v1.6</div>
+  <div class="version">v1.7</div>
 
   <script>
-    let selectedRole = 'voter';
+    // ── Avatars ───────────────────────────────────────────
+    const AVATARS = [
+      '😎','🤓','🧐','🤔','🤯','🤠','🥷','🦸',
+      '🧙','😈','👾','🤖','🦊','🦄','🐱','🚀',
+      '📈','🔍','🕵️','🤫','🏛️','⚡',
+    ];
+
+    const STEREOTYPES = {
+      '📈': 'Story-Point-Maximierer*in',
+      '🔍': 'Detail-Versunkene*r',
+      '🕵️': 'Abhängigkeiten-Jäger*in',
+      '🤫': 'Stille Genießer*in',
+      '🏛️': 'Das-haben-wir-schon-immer-so-gemacht-Typ',
+      '⚡':  'Spontan-Architekt',
+    };
+
+    let selectedAvatar = AVATARS[0];
+    let selectedRole   = 'voter';
+
+    // Build avatar grid
+    const grid = document.getElementById('avatarGrid');
+    AVATARS.forEach(emoji => {
+      const btn = document.createElement('button');
+      btn.className = 'avatar-btn' + (emoji === selectedAvatar ? ' selected' : '');
+      btn.textContent = emoji;
+      btn.type = 'button';
+      btn.onclick = () => selectAvatar(emoji);
+      grid.appendChild(btn);
+    });
+
+    function selectAvatar(emoji) {
+      selectedAvatar = emoji;
+      document.querySelectorAll('.avatar-btn').forEach(b => {
+        b.classList.toggle('selected', b.textContent === emoji);
+      });
+    }
+
+    function applyStereotype() {
+      const val = document.getElementById('stereotype').value;
+      if (!val) return;
+      const [emoji, name] = val.split('|');
+      document.getElementById('name').value = name;
+      selectAvatar(emoji);
+    }
 
     function setRole(role) {
       selectedRole = role;
@@ -190,14 +278,17 @@
       const name = document.getElementById('name').value.trim();
       const code = document.getElementById('roomCode').value.trim().toLowerCase().replace(/\s+/g, '');
       const err  = document.getElementById('error');
-
       if (!name) { err.style.display = 'block'; return; }
       err.style.display = 'none';
-
       const roomId = code || Math.random().toString(36).substring(2, 8);
-      location.href = `room.html?room=${encodeURIComponent(roomId)}&name=${encodeURIComponent(name)}&role=${selectedRole}`;
+      location.href =
+        `room.html?room=${encodeURIComponent(roomId)}` +
+        `&name=${encodeURIComponent(name)}` +
+        `&role=${selectedRole}` +
+        `&avatar=${encodeURIComponent(selectedAvatar)}`;
     }
 
+    // ── Random Twonks image ───────────────────────────────
     const TWONKS = [
       'https://static.wixstatic.com/media/e6db62_2ada3b66cfb947ada9aaeec9214f3ab2~mv2.png',
       'https://static.wixstatic.com/media/e6db62_0e89ee9bafbd4ee79fe672f09b096c68~mv2.png',
@@ -214,7 +305,7 @@
     document.getElementById('heroImg').src = TWONKS[Math.floor(Math.random() * TWONKS.length)];
 
     document.addEventListener('keydown', e => {
-      if (e.key === 'Enter') enter();
+      if (e.key === 'Enter' && document.activeElement?.id !== 'stereotype') enter();
     });
   </script>
 

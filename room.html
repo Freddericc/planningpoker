@@ -212,6 +212,31 @@
     }
     .vote-card.voted   { border-color: #86efac; background: #f0fdf4; color: #16a34a; font-size: 1rem; }
     .vote-card.revealed { border-color: #e94560; background: #e94560; color: #fff; }
+    .p-avatar { font-size: 1.8rem; margin-bottom: 4px; line-height: 1; }
+
+    .ov-avatar-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 14px;
+      justify-content: center;
+    }
+    .ov-avatar-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 7px;
+      border: 2px solid #e2e8f0;
+      background: #f8fafc;
+      font-size: 1.15rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.12s;
+    }
+    .ov-avatar-btn:hover { border-color: #e94560; transform: scale(1.1); }
+    .ov-avatar-btn.selected { border-color: #e94560; background: #fff5f7; box-shadow: 0 0 0 3px rgba(233,69,96,0.15); }
+
     .observer-badge {
       display: inline-flex;
       align-items: center;
@@ -444,6 +469,7 @@
       <h2>Raum beitreten</h2>
       <p>Wie möchtest du teilnehmen?</p>
       <input type="text" id="nameInput" placeholder="Dein Name" maxlength="30" autofocus>
+      <div class="ov-avatar-grid" id="overlayAvatarGrid"></div>
       <div class="role-grid">
         <button class="role-btn active" id="overlay-voter" onclick="setOverlayRole('voter')">
           <span class="role-icon">🃏</span>
@@ -532,7 +558,7 @@
   <script src="firebase-config.js"></script>
 
   <script>
-    const CARDS = ['0', '1', '2', '3', '5', '8', '13', '21', '40', '?', '☕'];
+    const CARDS = ['1', '2', '3', '5', '8', '13', '?'];
 
     const REACTIONS = [
       { text: 'puhhh… schwieeerig 😓' },
@@ -546,14 +572,21 @@
     const REACTION_MUTED = { text: 'Ups, ich war gemutet 🔇', muted: true };
 
     // ── URL params ────────────────────────────────────────
-    const params  = new URLSearchParams(location.search);
-    const roomId  = (params.get('room') || 'default').toLowerCase();
-    const urlName = params.get('name') || '';
-    const urlRole = params.get('role') || '';
+    const AVATARS = [
+      '😎','🤓','🧐','🤔','🤯','🤠','🥷','🦸',
+      '🧙','😈','👾','🤖','🦊','🦄','🐱','🚀',
+      '📈','🔍','🕵️','🤫','🏛️','⚡',
+    ];
+
+    const params      = new URLSearchParams(location.search);
+    const roomId      = (params.get('room') || 'default').toLowerCase();
+    const urlName     = params.get('name')   || '';
+    const urlRole     = params.get('role')   || '';
+    const urlAvatar   = params.get('avatar') || '';
 
     let db, roomRef, participantRef;
-    let userId, myName = '', myRole = 'voter', myVote = null;
-    let isRevealed = false, partyFired = false, overlayRole = 'voter';
+    let userId, myName = '', myRole = 'voter', myAvatar = '😎', myVote = null;
+    let isRevealed = false, partyFired = false, overlayRole = 'voter', overlayAvatar = '😎';
     let lastBubbleTs = 0, bubbleTimer = null;
 
     // ── Init ──────────────────────────────────────────────
@@ -578,14 +611,15 @@
 
     // Decide whether to show overlay
     if (urlName && urlRole) {
-      myName = urlName; myRole = urlRole;
+      myName = urlName; myRole = urlRole; myAvatar = urlAvatar || '😎';
       hide('nameOverlay');
       enterRoom();
     } else if (stored?.name) {
-      myName = stored.name; myRole = stored.role || 'voter';
+      myName = stored.name; myRole = stored.role || 'voter'; myAvatar = stored.avatar || '😎';
       hide('nameOverlay');
       enterRoom();
     } else {
+      buildOverlayAvatarGrid();
       show('nameOverlay');
     }
 
@@ -600,17 +634,34 @@
       document.getElementById('overlay-observer').classList.toggle('active', role === 'observer');
     }
 
+    function buildOverlayAvatarGrid() {
+      const container = document.getElementById('overlayAvatarGrid');
+      container.innerHTML = '';
+      AVATARS.forEach(emoji => {
+        const btn = document.createElement('button');
+        btn.className = 'ov-avatar-btn' + (emoji === overlayAvatar ? ' selected' : '');
+        btn.textContent = emoji;
+        btn.type = 'button';
+        btn.onclick = () => {
+          overlayAvatar = emoji;
+          container.querySelectorAll('.ov-avatar-btn').forEach(b =>
+            b.classList.toggle('selected', b.textContent === emoji));
+        };
+        container.appendChild(btn);
+      });
+    }
+
     function joinWithName() {
       const val = document.getElementById('nameInput').value.trim();
       if (!val) return;
-      myName = val; myRole = overlayRole;
+      myName = val; myRole = overlayRole; myAvatar = overlayAvatar;
       hide('nameOverlay');
       enterRoom();
     }
 
     // ── Enter room ────────────────────────────────────────
     function enterRoom() {
-      localStorage.setItem(storageKey, JSON.stringify({ id: userId, name: myName, role: myRole }));
+      localStorage.setItem(storageKey, JSON.stringify({ id: userId, name: myName, role: myRole, avatar: myAvatar }));
 
       if (myRole === 'observer') {
         hide('voterSection');
@@ -619,7 +670,7 @@
 
       participantRef = db.ref(`rooms/${roomId}/participants/${userId}`);
       participantRef.onDisconnect().remove();
-      participantRef.set({ name: myName, vote: null, role: myRole });
+      participantRef.set({ name: myName, vote: null, role: myRole, avatar: myAvatar });
 
       roomRef.on('value', snap => {
         const data = snap.val() || {};
@@ -690,6 +741,13 @@
         const wrap = document.createElement('div');
         wrap.className = 'participant' +
           (isObs ? ' observer-card' : isRevealed ? ' revealed' : hasVote ? ' voted' : '');
+
+        if (p.avatar) {
+          const av = document.createElement('div');
+          av.className = 'p-avatar';
+          av.textContent = p.avatar;
+          wrap.appendChild(av);
+        }
 
         const nameEl = document.createElement('div');
         nameEl.className = 'participant-name';
@@ -791,10 +849,10 @@
       const p = [pts[0], ...pts, pts[pts.length-1]];
       let d = `M ${pts[0][0]} ${pts[0][1]}`;
       for (let i=1; i<p.length-2; i++) {
-        const cp1x = p[i][0]   + (p[i+1][0] - p[i-1][0]) / 6;
-        const cp1y = p[i][1]   + (p[i+1][1] - p[i-1][1]) / 6;
-        const cp2x = p[i+1][0] - (p[i+2][0] - p[i][0])   / 6;
-        const cp2y = p[i+1][1] - (p[i+2][1] - p[i][1])   / 6;
+        const cp1x = p[i][0]   + (p[i+1][0] - p[i-1][0]) / 4;
+        const cp1y = p[i][1]   + (p[i+1][1] - p[i-1][1]) / 4;
+        const cp2x = p[i+1][0] - (p[i+2][0] - p[i][0])   / 4;
+        const cp2y = p[i+1][1] - (p[i+2][1] - p[i][1])   / 4;
         d += ` C ${cp1x} ${cp1y} ${cp2x} ${cp2y} ${p[i+1][0]} ${p[i+1][1]}`;
       }
       return d;
@@ -913,6 +971,6 @@
     function hide(id) { document.getElementById(id).style.display = 'none'; }
   </script>
 
-  <div class="version">v1.6</div>
+  <div class="version">v1.7</div>
 </body>
 </html>
