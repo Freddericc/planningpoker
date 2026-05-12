@@ -100,32 +100,29 @@
     .avatar-btn:hover { border-color: #e94560; transform: scale(1.12); }
     .avatar-btn.selected { border-color: #e94560; background: #fff5f7; box-shadow: 0 0 0 3px rgba(233,69,96,0.15); }
 
-    /* Role picker */
-    .role-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 20px; }
-    .role-btn {
-      border: 1.5px solid #e2e8f0;
-      border-radius: 10px;
-      padding: 12px 8px;
-      background: #f8fafc;
-      cursor: pointer;
-      text-align: center;
+    /* Action buttons (Teilnehmen / Beobachten) */
+    .action-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 8px; }
+    .action-btn {
+      border-radius: 12px; padding: 20px 10px;
+      cursor: pointer; text-align: center;
       transition: all 0.15s;
-      display: flex; flex-direction: column; align-items: center; gap: 3px;
+      display: flex; flex-direction: column; align-items: center; gap: 6px;
+      font-family: inherit;
     }
-    .role-btn:hover { border-color: #e94560; }
-    .role-btn.active { border-color: #e94560; background: #fff5f7; }
-    .role-icon { font-size: 1.4rem; }
-    .role-name { font-size: 0.85rem; font-weight: 600; color: #0f172a; }
-    .role-desc { font-size: 0.7rem; color: #94a3b8; }
-
-    .btn {
-      width: 100%; padding: 13px;
-      border: none; border-radius: 8px;
-      font-size: 0.95rem; font-weight: 600;
-      cursor: pointer; transition: all 0.15s;
+    .action-btn-primary {
       background: #e94560; color: #fff;
+      border: 2px solid #e94560;
     }
-    .btn:hover { background: #c73652; }
+    .action-btn-primary:hover { background: #c73652; border-color: #c73652; transform: translateY(-2px); box-shadow: 0 6px 16px rgba(233,69,96,0.3); }
+    .action-btn-secondary {
+      background: #f8fafc; color: #0f172a;
+      border: 2px solid #e2e8f0;
+    }
+    .action-btn-secondary:hover { border-color: #e94560; background: #fff5f7; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.06); }
+    .action-btn:active { transform: translateY(0) !important; }
+    .action-icon { font-size: 1.8rem; line-height: 1; }
+    .action-name { font-size: 0.95rem; font-weight: 700; }
+    .action-desc { font-size: 0.72rem; opacity: 0.75; }
 
     .error { color: #e94560; font-size: 0.82rem; margin-top: 10px; display: none; }
 
@@ -162,9 +159,9 @@
     html.dark input::placeholder { color: #475569; }
     html.dark .avatar-btn   { background: #0f172a; border-color: #334155; }
     html.dark .avatar-btn.selected { background: #2d1219; }
-    html.dark .role-btn     { background: #0f172a; border-color: #334155; }
-    html.dark .role-name    { color: #f1f5f9; }
-    html.dark .role-btn.active { background: #2d1219; }
+    html.dark .action-btn-secondary { background: #1e293b; border-color: #334155; color: #f1f5f9; }
+    html.dark .action-btn-secondary:hover { border-color: #e94560; background: #2d1219; }
+    html.dark .action-desc  { opacity: 0.6; }
     html.dark .dark-toggle  { border-color: #334155; color: #94a3b8; }
     html.dark .dark-toggle:hover { background: #334155; }
   </style>
@@ -197,21 +194,18 @@
       <input type="text" id="roomCode" placeholder="z.B. sprint42" maxlength="30">
     </div>
 
-    <div class="field-label" style="margin-bottom:8px">Rolle</div>
-    <div class="role-grid">
-      <button class="role-btn active" id="btn-voter" onclick="setRole('voter')">
-        <span class="role-icon">🃏</span>
-        <span class="role-name">Schätzer</span>
-        <span class="role-desc">Entwickler · Team</span>
+    <div class="action-grid">
+      <button class="action-btn action-btn-primary" onclick="enterAs('voter')">
+        <span class="action-icon">🃏</span>
+        <span class="action-name">Teilnehmen</span>
+        <span class="action-desc">Schätzen &amp; abstimmen</span>
       </button>
-      <button class="role-btn" id="btn-observer" onclick="setRole('observer')">
-        <span class="role-icon">👁️</span>
-        <span class="role-name">Beobachter</span>
-        <span class="role-desc">PO · Stakeholder</span>
+      <button class="action-btn action-btn-secondary" onclick="enterAs('observer')">
+        <span class="action-icon">🔭</span>
+        <span class="action-name">Beobachten</span>
+        <span class="action-desc">Ergebnisse verfolgen</span>
       </button>
     </div>
-
-    <button class="btn" onclick="enter()">Los geht's →</button>
     <p class="error" id="error">Bitte gib deinen Namen ein.</p>
 
   </div>
@@ -226,7 +220,6 @@
     ];
 
     let selectedAvatar = AVATARS[0];
-    let selectedRole   = 'voter';
 
     const grid = document.getElementById('avatarGrid');
     AVATARS.forEach(emoji => {
@@ -244,13 +237,7 @@
         b.classList.toggle('selected', b.textContent === emoji));
     }
 
-    function setRole(role) {
-      selectedRole = role;
-      document.getElementById('btn-voter').classList.toggle('active', role === 'voter');
-      document.getElementById('btn-observer').classList.toggle('active', role === 'observer');
-    }
-
-    function enter() {
+    function enterAs(role) {
       const name = document.getElementById('name').value.trim();
       const code = document.getElementById('roomCode').value.trim().toLowerCase().replace(/\s+/g, '');
       const err  = document.getElementById('error');
@@ -260,7 +247,7 @@
       location.href =
         `room.html?room=${encodeURIComponent(roomId)}` +
         `&name=${encodeURIComponent(name)}` +
-        `&role=${selectedRole}` +
+        `&role=${role}` +
         `&avatar=${encodeURIComponent(selectedAvatar)}`;
     }
 
@@ -281,7 +268,9 @@
     ];
     document.getElementById('heroImg').src = TWONKS[Math.floor(Math.random() * TWONKS.length)];
 
-    document.addEventListener('keydown', e => { if (e.key === 'Enter') enter(); });
+    document.getElementById('name').addEventListener('keydown', e => {
+      if (e.key === 'Enter') enterAs('voter');
+    });
 
     // ── Dark mode ─────────────────────────────────────────
     function toggleDark() {
