@@ -210,8 +210,13 @@
       color: #cbd5e0;
       transition: all 0.25s;
     }
-    .vote-card.voted   { border-color: #86efac; background: #f0fdf4; color: #16a34a; font-size: 1rem; }
+    .vote-card.voted    { border-color: #86efac; background: #f0fdf4; color: #16a34a; font-size: 1rem; }
     .vote-card.revealed { border-color: #e94560; background: #e94560; color: #fff; }
+    @keyframes votePulse {
+      0%, 100% { box-shadow: 0 0 0 2px rgba(245,158,11,0.25); }
+      50%       { box-shadow: 0 0 0 8px rgba(245,158,11,0.55); }
+    }
+    .vote-card.changed  { border-color: #f59e0b; background: #f59e0b; color: #fff; animation: votePulse 1s ease-in-out infinite; }
     .p-avatar { font-size: 1.8rem; margin-bottom: 4px; line-height: 1; }
 
     .ov-avatar-grid {
@@ -588,6 +593,7 @@
     let userId, myName = '', myRole = 'voter', myAvatar = '😎', myVote = null;
     let isRevealed = false, partyFired = false, overlayRole = 'voter', overlayAvatar = '😎';
     let lastBubbleTs = 0, bubbleTimer = null, firstUpdate = true;
+    let changedVoters = new Set(), prevVotes = {};
 
     // ── Init ──────────────────────────────────────────────
     document.getElementById('displayRoomId').textContent = roomId;
@@ -682,6 +688,17 @@
         const myData = participants[userId];
         if (myData && !myData.vote && myVote) myVote = null;
 
+        // ── Track post-reveal vote changes ──
+        if (isRevealed) {
+          Object.entries(participants).forEach(([uid, p]) => {
+            if (p.role === 'observer') return;
+            if (uid in prevVotes && prevVotes[uid] !== p.vote) changedVoters.add(uid);
+          });
+        } else {
+          changedVoters.clear();
+        }
+        Object.entries(participants).forEach(([uid, p]) => { prevVotes[uid] = p.vote; });
+
         renderParticipants(participants);
         updateCardState();
         updateRevealBtn(voters);
@@ -710,7 +727,7 @@
 
     // ── Card selection ────────────────────────────────────
     function selectCard(val) {
-      if (isRevealed || myRole === 'observer') return;
+      if (myRole === 'observer') return;
       myVote = myVote === val ? null : val;
       participantRef.update({ vote: myVote });
       updateCardState();
@@ -719,7 +736,7 @@
     function updateCardState() {
       document.querySelectorAll('.poker-card').forEach(c => {
         c.classList.toggle('selected', c.dataset.val === myVote);
-        c.classList.toggle('disabled', isRevealed);
+        c.classList.remove('disabled');
       });
     }
 
@@ -761,9 +778,10 @@
           badge.textContent = '👁️ Beobachter';
           wrap.appendChild(badge);
         } else {
+          const isChanged = isRevealed && changedVoters.has(uid);
           const voteEl = document.createElement('div');
           voteEl.className = 'vote-card' +
-            (isRevealed ? ' revealed' : hasVote ? ' voted' : '');
+            (isChanged ? ' changed' : isRevealed ? ' revealed' : hasVote ? ' voted' : '');
           voteEl.textContent = isRevealed ? (p.vote || '—') : hasVote ? '✓' : '…';
           wrap.appendChild(voteEl);
         }
