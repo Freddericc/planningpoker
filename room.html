@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Planning Poker – Raum</title>
+  <script>if(localStorage.getItem('pp_dark')==='1')document.documentElement.classList.add('dark');</script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -30,109 +31,76 @@
     .header-right { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
     .room-label { color: #94a3b8; font-size: 0.85rem; }
     .room-code {
-      background: #f1f5f9;
-      padding: 4px 14px;
-      border-radius: 6px;
-      font-family: monospace;
-      font-size: 0.95rem;
-      color: #0f172a;
-      border: 1px solid #e2e8f0;
+      background: #f1f5f9; padding: 4px 14px;
+      border-radius: 6px; font-family: monospace;
+      font-size: 0.95rem; color: #0f172a; border: 1px solid #e2e8f0;
     }
     .copy-btn {
-      background: transparent;
-      border: 1.5px solid #e2e8f0;
-      color: #64748b;
-      padding: 5px 12px;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 0.8rem;
-      transition: all 0.15s;
+      background: transparent; border: 1.5px solid #e2e8f0;
+      color: #64748b; padding: 5px 12px; border-radius: 6px;
+      cursor: pointer; font-size: 0.8rem; transition: all 0.15s;
     }
     .copy-btn:hover { background: #f1f5f9; color: #0f172a; }
 
-    /* ── Main ── */
-    main {
-      max-width: 960px;
-      margin: 0 auto;
-      padding: 36px 20px 60px;
+    /* ── Dark toggle ── */
+    .dark-toggle {
+      background: transparent; border: 1.5px solid #e2e8f0;
+      border-radius: 8px; width: 34px; height: 34px;
+      cursor: pointer; font-size: 1rem;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.15s; line-height: 1;
     }
+    .dark-toggle:hover { background: #f1f5f9; }
+
+    /* ── Main ── */
+    main { max-width: 960px; margin: 0 auto; padding: 36px 20px 60px; }
 
     .section-label {
-      font-size: 0.72rem;
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-      color: #94a3b8;
-      margin-bottom: 14px;
+      font-size: 0.72rem; text-transform: uppercase;
+      letter-spacing: 0.1em; color: #94a3b8; margin-bottom: 14px;
     }
 
+    /* ── Title input ── */
+    .title-wrap { margin-bottom: 28px; }
+    .title-input {
+      width: 100%; padding: 11px 16px;
+      background: #fff; border: 1.5px solid #e2e8f0;
+      border-radius: 8px; color: #0f172a;
+      font-size: 1rem; font-weight: 600;
+      outline: none; transition: border-color 0.2s, background 0.2s;
+    }
+    .title-input:focus { border-color: #e94560; }
+    .title-input::placeholder { color: #94a3b8; font-weight: 400; }
+
     /* ── Poker cards ── */
-    .cards-grid {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-bottom: 40px;
-    }
+    .cards-grid { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 40px; }
     .poker-card {
-      width: 62px;
-      height: 88px;
-      background: #fff;
-      border: 2px solid #e2e8f0;
-      border-radius: 10px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.3rem;
-      font-weight: 700;
-      color: #475569;
-      cursor: pointer;
-      transition: all 0.15s;
-      user-select: none;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+      width: 62px; height: 88px;
+      background: #fff; border: 2px solid #e2e8f0;
+      border-radius: 10px; display: flex;
+      align-items: center; justify-content: center;
+      font-size: 1.3rem; font-weight: 700; color: #475569;
+      cursor: pointer; transition: all 0.15s;
+      user-select: none; box-shadow: 0 1px 3px rgba(0,0,0,0.06);
     }
-    .poker-card:hover {
-      border-color: #e94560;
-      color: #e94560;
-      transform: translateY(-6px);
-      box-shadow: 0 6px 16px rgba(233,69,96,0.15);
-    }
-    .poker-card.selected {
-      background: #e94560;
-      border-color: #e94560;
-      color: #fff;
-      transform: translateY(-10px);
-      box-shadow: 0 8px 24px rgba(233,69,96,0.4);
-    }
-    .poker-card.disabled {
-      opacity: 0.35;
-      cursor: not-allowed;
-      transform: none !important;
-      box-shadow: none;
-    }
+    .poker-card:hover { border-color: #e94560; color: #e94560; transform: translateY(-6px); box-shadow: 0 6px 16px rgba(233,69,96,0.15); }
+    .poker-card.selected { background: #e94560; border-color: #e94560; color: #fff; transform: translateY(-10px); box-shadow: 0 8px 24px rgba(233,69,96,0.4); }
+    .poker-card.disabled { opacity: 0.35; cursor: not-allowed; transform: none !important; box-shadow: none; }
 
     /* ── Observer notice ── */
     .observer-notice {
-      display: none;
-      background: #fff;
-      border: 1.5px solid #e2e8f0;
-      border-radius: 12px;
-      padding: 20px 24px;
-      margin-bottom: 40px;
-      color: #64748b;
-      font-size: 0.95rem;
-      align-items: center;
-      gap: 12px;
+      display: none; background: #fff; border: 1.5px solid #e2e8f0;
+      border-radius: 12px; padding: 20px 24px; margin-bottom: 40px;
+      color: #64748b; font-size: 0.95rem; align-items: center; gap: 12px;
     }
     .observer-notice.visible { display: flex; }
     .observer-notice span { font-size: 1.6rem; }
 
     /* ── Results ── */
     .results-box {
-      background: #fff;
-      border: 1px solid #e2e8f0;
-      border-radius: 12px;
-      padding: 20px 28px;
-      margin-bottom: 36px;
-      display: none;
+      background: #fff; border: 1px solid #e2e8f0;
+      border-radius: 12px; padding: 20px 28px;
+      margin-bottom: 36px; display: none;
       box-shadow: 0 1px 3px rgba(0,0,0,0.06);
       animation: fadeIn 0.3s ease;
     }
@@ -145,69 +113,44 @@
     .results-unit { font-size: 0.85rem; color: #94a3b8; margin-top: 4px; }
     .results-votes { margin-top: 12px; display: flex; flex-wrap: wrap; gap: 8px; }
     .vote-chip {
-      background: #f1f5f9;
-      border-radius: 6px;
-      padding: 4px 10px;
-      font-size: 0.85rem;
-      color: #64748b;
-      border: 1px solid #e2e8f0;
+      background: #f1f5f9; border-radius: 6px; padding: 4px 10px;
+      font-size: 0.85rem; color: #64748b; border: 1px solid #e2e8f0;
     }
     .vote-chip strong { color: #0f172a; }
 
     /* ── Distribution chart ── */
     .chart-wrap {
-      margin-top: 20px;
-      background: #f8fafc;
-      border-radius: 10px;
-      padding: 16px 12px 8px;
+      margin-top: 20px; background: #f8fafc;
+      border-radius: 10px; padding: 16px 12px 8px;
       border: 1px solid #e2e8f0;
     }
     .chart-wrap svg { display: block; width: 100%; overflow: visible; }
 
     /* ── Participants ── */
     .participants-grid {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 14px;
-      margin-bottom: 36px;
-      min-height: 110px;
+      display: flex; flex-wrap: wrap; gap: 14px;
+      margin-bottom: 14px; min-height: 110px;
     }
     .participant {
-      background: #fff;
-      border: 1.5px solid #e2e8f0;
-      border-radius: 12px;
-      padding: 16px 14px;
-      min-width: 120px;
-      text-align: center;
+      background: #fff; border: 1.5px solid #e2e8f0;
+      border-radius: 12px; padding: 16px 14px;
+      min-width: 120px; text-align: center;
       transition: border-color 0.2s;
       box-shadow: 0 1px 2px rgba(0,0,0,0.04);
     }
     .participant.voted   { border-color: #86efac; }
     .participant.revealed { border-color: #e94560; }
-    .participant.observer-card { border-style: dashed; background: #fafafa; }
     .participant-name {
-      font-size: 0.85rem;
-      color: #64748b;
-      margin-bottom: 12px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      max-width: 110px;
+      font-size: 0.85rem; color: #64748b;
+      margin-bottom: 12px; white-space: nowrap;
+      overflow: hidden; text-overflow: ellipsis; max-width: 110px;
     }
     .participant-name em { color: #e94560; font-style: normal; font-size: 0.75rem; }
     .vote-card {
-      width: 48px;
-      height: 66px;
-      border-radius: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin: 0 auto;
-      font-size: 1.2rem;
-      font-weight: 700;
-      border: 2px solid #e2e8f0;
-      background: #f8fafc;
-      color: #cbd5e0;
+      width: 48px; height: 66px; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto; font-size: 1.2rem; font-weight: 700;
+      border: 2px solid #e2e8f0; background: #f8fafc; color: #cbd5e0;
       transition: all 0.25s;
     }
     .vote-card.voted    { border-color: #86efac; background: #f0fdf4; color: #16a34a; font-size: 1rem; }
@@ -219,80 +162,70 @@
     .vote-card.changed  { border-color: #f59e0b; background: #f59e0b; color: #fff; animation: votePulse 1s ease-in-out 5; }
     .p-avatar { font-size: 1.8rem; margin-bottom: 4px; line-height: 1; }
 
+    /* ── Observers strip ── */
+    .observers-section { margin-bottom: 28px; }
+    .observers-row { display: flex; flex-wrap: wrap; gap: 8px; }
+    .observer-chip {
+      display: flex; align-items: center; gap: 6px;
+      background: #fff; border: 1.5px dashed #e2e8f0;
+      border-radius: 20px; padding: 5px 12px 5px 8px;
+      font-size: 0.85rem; color: #64748b;
+    }
+
+    /* ── Overlay avatar grid (in name dialog) ── */
     .ov-avatar-grid {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      margin-bottom: 14px;
-      justify-content: center;
+      display: flex; flex-wrap: wrap; gap: 6px;
+      margin-bottom: 14px; justify-content: center;
     }
     .ov-avatar-btn {
-      width: 36px;
-      height: 36px;
-      border-radius: 7px;
-      border: 2px solid #e2e8f0;
-      background: #f8fafc;
-      font-size: 1.15rem;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      width: 36px; height: 36px; border-radius: 7px;
+      border: 2px solid #e2e8f0; background: #f8fafc;
+      font-size: 1.15rem; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
       transition: all 0.12s;
     }
     .ov-avatar-btn:hover { border-color: #e94560; transform: scale(1.1); }
     .ov-avatar-btn.selected { border-color: #e94560; background: #fff5f7; box-shadow: 0 0 0 3px rgba(233,69,96,0.15); }
 
     .observer-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      font-size: 0.75rem;
-      color: #94a3b8;
-      background: #f1f5f9;
-      border-radius: 20px;
-      padding: 4px 10px;
-      border: 1px solid #e2e8f0;
+      display: inline-flex; align-items: center; gap: 4px;
+      font-size: 0.75rem; color: #94a3b8; background: #f1f5f9;
+      border-radius: 20px; padding: 4px 10px; border: 1px solid #e2e8f0;
     }
 
     /* ── Controls ── */
     .controls { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 32px; }
     .btn {
-      padding: 12px 30px;
-      border: none;
-      border-radius: 8px;
-      font-size: 0.95rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.15s;
+      padding: 12px 30px; border: none; border-radius: 8px;
+      font-size: 0.95rem; font-weight: 600;
+      cursor: pointer; transition: all 0.15s;
     }
     .btn-reveal { background: #e94560; color: #fff; }
     .btn-reveal:hover:not(:disabled) { background: #c73652; }
     .btn-reset  { background: #f1f5f9; color: #0f172a; border: 1.5px solid #e2e8f0; }
     .btn-reset:hover { background: #e2e8f0; }
     .btn:disabled { opacity: 0.35; cursor: not-allowed; }
+    .btn-toot {
+      background: #fff; border: 1.5px solid #e2e8f0;
+      border-radius: 8px; padding: 10px 16px;
+      font-size: 1.3rem; cursor: pointer;
+      transition: all 0.15s; line-height: 1;
+    }
+    .btn-toot:hover { border-color: #f59e0b; background: #fffbeb; transform: scale(1.06); }
+    .btn-toot:active { transform: scale(0.95); }
 
     /* ── Reactions ── */
     .reactions-section { margin-bottom: 40px; }
     .reaction-btns { display: flex; flex-wrap: wrap; gap: 8px; }
     .reaction-btn {
-      padding: 8px 14px;
-      border: 1.5px solid #e2e8f0;
-      border-radius: 20px;
-      background: #fff;
-      color: #475569;
-      font-size: 0.85rem;
-      cursor: pointer;
-      transition: all 0.15s;
-      white-space: nowrap;
-      box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+      padding: 8px 14px; border: 1.5px solid #e2e8f0;
+      border-radius: 20px; background: #fff; color: #475569;
+      font-size: 0.85rem; cursor: pointer; transition: all 0.15s;
+      white-space: nowrap; box-shadow: 0 1px 2px rgba(0,0,0,0.04);
     }
     .reaction-btn:hover { border-color: #e94560; color: #e94560; background: #fff5f7; }
     .reaction-btn:active { transform: scale(0.95); }
-    .reaction-muted {
-      border-color: #f59e0b;
-      color: #d97706;
-      background: #fffbeb;
-    }
+    .reaction-muted { border-color: #f59e0b; color: #d97706; background: #fffbeb; }
     .reaction-muted:hover { border-color: #d97706; background: #fef3c7; color: #b45309; }
 
     /* ── Speech bubble ── */
@@ -304,97 +237,56 @@
       100% { opacity: 0; transform: translateX(-50%) scale(0.95) translateY(-14px); }
     }
     .speech-bubble {
-      position: fixed;
-      top: 22%;
-      left: 50%;
+      position: fixed; top: 22%; left: 50%;
       transform: translateX(-50%);
-      background: #fff;
-      border: 2px solid #e2e8f0;
-      border-radius: 20px;
-      padding: 16px 24px;
-      max-width: 320px;
-      text-align: center;
+      background: #fff; border: 2px solid #e2e8f0;
+      border-radius: 20px; padding: 16px 24px;
+      max-width: 320px; text-align: center;
       box-shadow: 0 12px 40px rgba(0,0,0,0.12);
-      z-index: 350;
-      pointer-events: none;
+      z-index: 350; pointer-events: none;
       animation: bubbleLife 5s ease forwards;
     }
     .speech-bubble::after {
-      content: '';
-      position: absolute;
-      bottom: -13px;
-      left: 50%;
-      transform: translateX(-50%);
-      border: 7px solid transparent;
+      content: ''; position: absolute; bottom: -13px; left: 50%;
+      transform: translateX(-50%); border: 7px solid transparent;
       border-top-color: #e2e8f0;
     }
     .speech-bubble::before {
-      content: '';
-      position: absolute;
-      bottom: -10px;
-      left: 50%;
-      transform: translateX(-50%);
-      border: 5px solid transparent;
-      border-top-color: #fff;
-      z-index: 1;
+      content: ''; position: absolute; bottom: -10px; left: 50%;
+      transform: translateX(-50%); border: 5px solid transparent;
+      border-top-color: #fff; z-index: 1;
     }
     .bubble-author { font-size: 0.75rem; color: #94a3b8; margin-bottom: 6px; }
     .bubble-text   { font-size: 1.05rem; font-weight: 600; color: #0f172a; }
 
     /* ── Name / role overlay ── */
     .overlay {
-      position: fixed;
-      inset: 0;
+      position: fixed; inset: 0;
       background: rgba(15,23,42,0.5);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 200;
-      backdrop-filter: blur(4px);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 200; backdrop-filter: blur(4px);
     }
     .dialog {
-      background: #fff;
-      border-radius: 16px;
-      padding: 40px 36px;
-      width: 100%;
-      max-width: 380px;
-      text-align: center;
+      background: #fff; border-radius: 16px; padding: 40px 36px;
+      width: 100%; max-width: 380px; text-align: center;
       box-shadow: 0 20px 60px rgba(0,0,0,0.15);
     }
     .dialog .icon { font-size: 2.5rem; margin-bottom: 16px; }
     .dialog h2  { color: #0f172a; margin-bottom: 6px; }
     .dialog p   { color: #64748b; font-size: 0.9rem; margin-bottom: 20px; }
     .dialog input {
-      width: 100%;
-      padding: 11px 16px;
-      background: #f8fafc;
-      border: 1.5px solid #e2e8f0;
-      border-radius: 8px;
-      color: #0f172a;
-      font-size: 1rem;
-      margin-bottom: 12px;
-      outline: none;
+      width: 100%; padding: 11px 16px;
+      background: #f8fafc; border: 1.5px solid #e2e8f0;
+      border-radius: 8px; color: #0f172a;
+      font-size: 1rem; margin-bottom: 12px; outline: none;
     }
     .dialog input:focus { border-color: #e94560; background: #fff; }
     .dialog input::placeholder { color: #94a3b8; }
-    .role-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
-      margin-bottom: 16px;
-    }
+    .role-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 16px; }
     .role-btn {
-      border: 1.5px solid #e2e8f0;
-      border-radius: 10px;
-      padding: 12px 8px;
-      background: #f8fafc;
-      cursor: pointer;
-      text-align: center;
-      transition: all 0.15s;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 3px;
+      border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 12px 8px;
+      background: #f8fafc; cursor: pointer; text-align: center;
+      transition: all 0.15s; display: flex; flex-direction: column; align-items: center; gap: 3px;
     }
     .role-btn:hover { border-color: #e94560; }
     .role-btn.active { border-color: #e94560; background: #fff5f7; }
@@ -402,15 +294,8 @@
     .role-name { font-size: 0.82rem; font-weight: 600; color: #0f172a; }
     .role-desc { font-size: 0.68rem; color: #94a3b8; }
     .dialog button.join-btn {
-      width: 100%;
-      padding: 13px;
-      background: #e94560;
-      color: #fff;
-      border: none;
-      border-radius: 8px;
-      font-size: 1rem;
-      font-weight: 600;
-      cursor: pointer;
+      width: 100%; padding: 13px; background: #e94560; color: #fff;
+      border: none; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer;
     }
     .dialog button.join-btn:hover { background: #c73652; }
 
@@ -418,22 +303,14 @@
 
     /* ── Consensus banner ── */
     .consensus-banner {
-      position: fixed;
-      top: 80px;
-      left: 50%;
+      position: fixed; top: 80px; left: 50%;
       transform: translateX(-50%) translateY(-20px);
       background: linear-gradient(135deg, #e94560, #f5a623);
-      color: #fff;
-      font-size: 1.3rem;
-      font-weight: 700;
-      padding: 14px 36px;
-      border-radius: 50px;
+      color: #fff; font-size: 1.3rem; font-weight: 700;
+      padding: 14px 36px; border-radius: 50px;
       box-shadow: 0 8px 32px rgba(233,69,96,0.4);
-      z-index: 500;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.4s, transform 0.4s;
-      white-space: nowrap;
+      z-index: 500; opacity: 0; pointer-events: none;
+      transition: opacity 0.4s, transform 0.4s; white-space: nowrap;
     }
     .consensus-banner.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
@@ -453,16 +330,113 @@
     .party-emoji { animation: partyRise linear forwards; display: block; }
     .party-drift { animation: partyDrift ease-in-out infinite; }
 
-    .version {
-      position: fixed;
-      bottom: 12px;
-      left: 16px;
-      font-size: 0.7rem;
-      color: #cbd5e0;
-      pointer-events: none;
-      user-select: none;
-      z-index: 10;
+    /* ── Tröte ── */
+    @keyframes screenShake {
+      0%, 100% { transform: translate(0,0) rotate(0); }
+      15%  { transform: translate(-6px,-3px) rotate(-0.5deg); }
+      30%  { transform: translate(5px,4px)   rotate(0.5deg); }
+      45%  { transform: translate(-4px,2px)  rotate(-0.3deg); }
+      60%  { transform: translate(6px,-3px)  rotate(0.3deg); }
+      75%  { transform: translate(-3px,3px)  rotate(-0.2deg); }
+      90%  { transform: translate(2px,-2px)  rotate(0.1deg); }
     }
+    body.shaking { animation: screenShake 0.6s ease; }
+
+    @keyframes tootWobble {
+      0%   { transform: translate(-50%,-50%) scale(0.5)  rotate(-15deg); opacity: 0; }
+      12%  { transform: translate(-50%,-50%) scale(1.25) rotate(15deg);  opacity: 1; }
+      24%  { transform: translate(-50%,-50%) scale(1)    rotate(-12deg); opacity: 1; }
+      36%  { transform: translate(-50%,-50%) scale(1.1)  rotate(12deg);  opacity: 1; }
+      48%  { transform: translate(-50%,-50%) scale(1)    rotate(-8deg);  opacity: 1; }
+      60%  { transform: translate(-50%,-50%) scale(1.05) rotate(8deg);   opacity: 1; }
+      75%  { transform: translate(-50%,-50%) scale(1)    rotate(-4deg);  opacity: 1; }
+      88%  { transform: translate(-50%,-50%) scale(1)    rotate(0);      opacity: 1; }
+      100% { transform: translate(-50%,-50%) scale(0.8)  rotate(0);      opacity: 0; }
+    }
+    .toot-display {
+      position: fixed; top: 50%; left: 50%;
+      font-size: 9rem; z-index: 1000;
+      pointer-events: none; line-height: 1;
+      animation: tootWobble 2.5s ease forwards;
+    }
+
+    /* ── History table ── */
+    .history-section { margin-top: 8px; }
+    .history-table {
+      width: 100%; border-collapse: collapse;
+      background: #fff; border-radius: 10px;
+      overflow: hidden; border: 1px solid #e2e8f0;
+      font-size: 0.88rem;
+    }
+    .history-table th {
+      background: #f8fafc; color: #94a3b8;
+      font-size: 0.72rem; text-transform: uppercase;
+      letter-spacing: 0.08em; font-weight: 600;
+      padding: 10px 14px; text-align: left;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    .history-table td { padding: 10px 14px; border-bottom: 1px solid #f1f5f9; color: #0f172a; }
+    .history-table tr:last-child td { border-bottom: none; }
+    .history-table td:last-child { font-weight: 700; color: #e94560; text-align: right; }
+
+    .version {
+      position: fixed; bottom: 12px; left: 16px;
+      font-size: 0.7rem; color: #cbd5e0;
+      pointer-events: none; user-select: none; z-index: 10;
+    }
+
+    /* ── Dark mode overrides ── */
+    html.dark body         { background: #0f172a; color: #f1f5f9; }
+    html.dark header       { background: #1e293b; border-color: #334155; box-shadow: none; }
+    html.dark .header-logo { color: #f1f5f9; }
+    html.dark .room-label  { color: #64748b; }
+    html.dark .room-code   { background: #0f172a; border-color: #334155; color: #f1f5f9; }
+    html.dark .copy-btn    { border-color: #334155; color: #94a3b8; }
+    html.dark .copy-btn:hover { background: #334155; color: #f1f5f9; }
+    html.dark .dark-toggle { border-color: #334155; color: #94a3b8; }
+    html.dark .dark-toggle:hover { background: #334155; }
+    html.dark .section-label { color: #64748b; }
+    html.dark .title-input { background: #1e293b; border-color: #334155; color: #f1f5f9; }
+    html.dark .title-input:focus { border-color: #e94560; }
+    html.dark .title-input::placeholder { color: #475569; font-weight: 400; }
+    html.dark .poker-card  { background: #1e293b; border-color: #334155; color: #94a3b8; box-shadow: none; }
+    html.dark .poker-card:hover { border-color: #e94560; color: #e94560; }
+    html.dark .observer-notice { background: #1e293b; border-color: #334155; color: #94a3b8; }
+    html.dark .results-box { background: #1e293b; border-color: #334155; box-shadow: none; }
+    html.dark .results-unit { color: #64748b; }
+    html.dark .vote-chip   { background: #0f172a; border-color: #334155; color: #94a3b8; }
+    html.dark .vote-chip strong { color: #f1f5f9; }
+    html.dark .chart-wrap  { background: #0f172a; border-color: #334155; }
+    html.dark .participant { background: #1e293b; border-color: #334155; box-shadow: none; }
+    html.dark .participant-name { color: #94a3b8; }
+    html.dark .vote-card   { background: #0f172a; border-color: #334155; color: #475569; }
+    html.dark .observer-chip { background: #1e293b; border-color: #334155; color: #94a3b8; }
+    html.dark .btn-reset   { background: #1e293b; border-color: #334155; color: #f1f5f9; }
+    html.dark .btn-reset:hover { background: #334155; }
+    html.dark .btn-toot    { background: #1e293b; border-color: #334155; }
+    html.dark .btn-toot:hover { border-color: #f59e0b; background: #2d2206; }
+    html.dark .reaction-btn { background: #1e293b; border-color: #334155; color: #94a3b8; box-shadow: none; }
+    html.dark .reaction-btn:hover { border-color: #e94560; color: #e94560; background: #2d1219; }
+    html.dark .reaction-muted { background: #2d2206; border-color: #d97706; color: #d97706; }
+    html.dark .speech-bubble { background: #1e293b; border-color: #334155; }
+    html.dark .speech-bubble::before { border-top-color: #1e293b; }
+    html.dark .speech-bubble::after  { border-top-color: #334155; }
+    html.dark .bubble-author { color: #64748b; }
+    html.dark .bubble-text   { color: #f1f5f9; }
+    html.dark .dialog      { background: #1e293b; }
+    html.dark .dialog h2   { color: #f1f5f9; }
+    html.dark .dialog p    { color: #94a3b8; }
+    html.dark .dialog input { background: #0f172a; border-color: #334155; color: #f1f5f9; }
+    html.dark .dialog input:focus { background: #1e293b; border-color: #e94560; }
+    html.dark .role-btn    { background: #0f172a; border-color: #334155; }
+    html.dark .role-name   { color: #f1f5f9; }
+    html.dark .role-btn.active { background: #2d1219; }
+    html.dark .ov-avatar-btn { background: #0f172a; border-color: #334155; }
+    html.dark .ov-avatar-btn.selected { background: #2d1219; border-color: #e94560; }
+    html.dark .waiting     { color: #475569; }
+    html.dark .history-table { background: #1e293b; border-color: #334155; }
+    html.dark .history-table th { background: #0f172a; color: #64748b; border-color: #334155; }
+    html.dark .history-table td { border-color: #334155; color: #f1f5f9; }
   </style>
 </head>
 <body>
@@ -498,11 +472,22 @@
       <span class="room-label">Raum</span>
       <span class="room-code" id="displayRoomId">—</span>
       <button class="copy-btn" id="copyBtn" onclick="copyLink()">🔗 Link kopieren</button>
+      <button class="dark-toggle" id="darkToggle" onclick="toggleDark()">🌙</button>
     </div>
   </header>
 
   <!-- Main -->
   <main>
+
+    <!-- Item title -->
+    <div class="title-wrap">
+      <div class="section-label">
+        Story / Aufgabe
+        <span style="font-size:0.65rem;font-weight:400;color:#94a3b8;text-transform:none;letter-spacing:0;margin-left:4px">(optional)</span>
+      </div>
+      <input type="text" id="titleInput" class="title-input"
+             placeholder="Titel des zu schätzenden Items…" maxlength="80">
+    </div>
 
     <!-- Voter: card selection -->
     <div id="voterSection">
@@ -530,13 +515,19 @@
       </div>
     </div>
 
-    <!-- Consensus banner (fixed, not in flow) -->
+    <!-- Consensus banner (fixed) -->
     <div class="consensus-banner" id="consensusBanner">🎉 Konsens! Alle einig!</div>
 
-    <!-- Participants -->
+    <!-- Voters -->
     <div class="section-label">Teilnehmer</div>
     <div class="participants-grid" id="participantsGrid">
       <p class="waiting">Warte auf Teilnehmer…</p>
+    </div>
+
+    <!-- Observers strip -->
+    <div class="observers-section" id="observersSection" style="display:none">
+      <div class="section-label">Beobachter</div>
+      <div class="observers-row" id="observersGrid"></div>
     </div>
 
     <!-- Controls -->
@@ -547,12 +538,27 @@
       <button class="btn btn-reset" onclick="resetVotes()">
         Neue Runde
       </button>
+      <button class="btn-toot" id="tootBtn" onclick="sendToot()" title="Tröte! – Bitte jetzt schätzen">📯</button>
     </div>
 
     <!-- Reactions -->
     <div class="reactions-section">
       <div class="section-label">Reaktionen</div>
       <div class="reaction-btns" id="reactionBtns"></div>
+    </div>
+
+    <!-- History -->
+    <div class="history-section" id="historySection" style="display:none">
+      <div class="section-label" style="margin-bottom:14px">Letzte Schätzungen</div>
+      <table class="history-table">
+        <thead>
+          <tr>
+            <th>Story / Aufgabe</th>
+            <th style="text-align:right">Durchschnitt</th>
+          </tr>
+        </thead>
+        <tbody id="historyBody"></tbody>
+      </table>
     </div>
 
   </main>
@@ -576,27 +582,28 @@
     ];
     const REACTION_MUTED = { text: 'Ups, ich war gemutet 🔇', muted: true };
 
-    // ── URL params ────────────────────────────────────────
     const AVATARS = [
       '😎','🤓','🧐','🤔','🤯','🤠','🥷','🦸',
       '🧙','😈','👾','🤖','🦊','🦄','🐱','🚀',
       '📈','🔍','🕵️','🤫','🏛️','⚡',
     ];
 
-    const params      = new URLSearchParams(location.search);
-    const roomId      = (params.get('room') || 'default').toLowerCase();
-    const urlName     = params.get('name')   || '';
-    const urlRole     = params.get('role')   || '';
-    const urlAvatar   = params.get('avatar') || '';
+    // ── URL params ────────────────────────────────────────
+    const params    = new URLSearchParams(location.search);
+    const roomId    = (params.get('room') || 'default').toLowerCase();
+    const urlName   = params.get('name')   || '';
+    const urlRole   = params.get('role')   || '';
+    const urlAvatar = params.get('avatar') || '';
 
     let db, roomRef, participantRef;
     let userId, myName = '', myRole = 'voter', myAvatar = '😎', myVote = null;
     let isRevealed = false, partyFired = false, overlayRole = 'voter', overlayAvatar = '😎';
-    let lastBubbleTs = 0, bubbleTimer = null, firstUpdate = true;
+    let lastBubbleTs = 0, lastTootTs = 0, bubbleTimer = null, firstUpdate = true;
     let changedVoters = new Map(), prevVotes = {};
     let partyWraps = [], bannerTimer = null;
+    let currentTitle = '', currentAvg = '—';
 
-    // ── Init ──────────────────────────────────────────────
+    // ── Init ─────────────────────────────────────────────
     document.getElementById('displayRoomId').textContent = roomId;
     db = firebase.database();
     roomRef = db.ref(`rooms/${roomId}`);
@@ -616,6 +623,16 @@
       grid.appendChild(card);
     });
 
+    // ── Dark mode ─────────────────────────────────────────
+    function toggleDark() {
+      const d = document.documentElement.classList.toggle('dark');
+      localStorage.setItem('pp_dark', d ? '1' : '0');
+      document.getElementById('darkToggle').textContent = d ? '☀️' : '🌙';
+    }
+    document.getElementById('darkToggle').textContent =
+      document.documentElement.classList.contains('dark') ? '☀️' : '🌙';
+
+    // ── Enter room or show overlay ────────────────────────
     if (urlName && urlRole) {
       myName = urlName; myRole = urlRole; myAvatar = urlAvatar || '😎';
       hide('nameOverlay');
@@ -633,7 +650,7 @@
       if (e.key === 'Enter') joinWithName();
     });
 
-    // ── Overlay role picker ───────────────────────────────
+    // ── Overlay role / avatar pickers ─────────────────────
     function setOverlayRole(role) {
       overlayRole = role;
       document.getElementById('overlay-voter').classList.toggle('active', role === 'voter');
@@ -678,6 +695,16 @@
       participantRef.onDisconnect().remove();
       participantRef.set({ name: myName, vote: null, role: myRole, avatar: myAvatar });
 
+      // Title input sync
+      const titleInputEl = document.getElementById('titleInput');
+      let titleDebounce;
+      titleInputEl.addEventListener('input', () => {
+        clearTimeout(titleDebounce);
+        titleDebounce = setTimeout(() => {
+          roomRef.child('title').set(titleInputEl.value.trim() || null);
+        }, 400);
+      });
+
       roomRef.on('value', snap => {
         const data = snap.val() || {};
         isRevealed = data.revealed || false;
@@ -685,11 +712,11 @@
         const voterEntries = Object.entries(participants).filter(([,p]) => p.role !== 'observer');
         const voters = voterEntries.map(([,p]) => p);
 
-        // ── Sync myVote with Firebase (handles remote reset) ──
+        // Sync myVote from Firebase (handles remote reset)
         const myData = participants[userId];
         if (myData && !myData.vote && myVote) myVote = null;
 
-        // ── Track post-reveal vote changes ──
+        // Track post-reveal vote changes
         if (isRevealed) {
           Object.entries(participants).forEach(([uid, p]) => {
             if (p.role === 'observer') return;
@@ -700,12 +727,17 @@
         }
         Object.entries(participants).forEach(([uid, p]) => { prevVotes[uid] = p.vote; });
 
+        // Sync title
+        const newTitle = data.title || '';
+        currentTitle = newTitle;
+        if (titleInputEl !== document.activeElement) titleInputEl.value = newTitle;
+
         renderParticipants(participants);
         updateCardState();
         updateRevealBtn(voters);
         renderReactions(voterEntries);
 
-        // ── Auto-reveal when all voters have voted ──
+        // Auto-reveal when all voters voted
         if (!isRevealed) {
           const allVoted = voters.length >= 1 && voters.every(p => p.vote);
           if (allVoted) revealVotes();
@@ -714,14 +746,25 @@
         if (isRevealed) showResults(voters);
         else            document.getElementById('resultsBox').classList.remove('visible');
 
-        // ── Speech bubbles (skip stale on rejoin) ──
+        // History
+        renderHistory(data.history || []);
+
+        // Speech bubbles & toot (skip stale on rejoin)
         const bubble = data.bubble;
+        const toot   = data.toot;
         if (firstUpdate) {
           lastBubbleTs = bubble?.ts || 0;
-          firstUpdate = false;
-        } else if (bubble && bubble.ts > lastBubbleTs) {
-          lastBubbleTs = bubble.ts;
-          showBubble(bubble);
+          lastTootTs   = toot?.ts   || 0;
+          firstUpdate  = false;
+        } else {
+          if (bubble && bubble.ts > lastBubbleTs) {
+            lastBubbleTs = bubble.ts;
+            showBubble(bubble);
+          }
+          if (toot && toot.ts > lastTootTs) {
+            lastTootTs = toot.ts;
+            triggerToot();
+          }
         }
       });
     }
@@ -743,53 +786,62 @@
 
     // ── Participants ──────────────────────────────────────
     function renderParticipants(participants) {
-      const pgrid = document.getElementById('participantsGrid');
+      const pgrid   = document.getElementById('participantsGrid');
+      const ogrid   = document.getElementById('observersGrid');
+      const osection = document.getElementById('observersSection');
       pgrid.innerHTML = '';
+      ogrid.innerHTML = '';
 
       const entries = Object.entries(participants);
-      if (!entries.length) {
+      const voterEntries    = entries.filter(([,p]) => p.role !== 'observer');
+      const observerEntries = entries.filter(([,p]) => p.role === 'observer');
+
+      if (!voterEntries.length) {
         pgrid.innerHTML = '<p class="waiting">Warte auf Teilnehmer…</p>';
-        return;
+      } else {
+        voterEntries.forEach(([uid, p]) => pgrid.appendChild(buildVoterCard(uid, p)));
       }
 
-      entries.forEach(([uid, p]) => {
-        const hasVote   = !!p.vote;
-        const isMe      = uid === userId;
-        const isObs     = p.role === 'observer';
-
-        const wrap = document.createElement('div');
-        wrap.className = 'participant' +
-          (isObs ? ' observer-card' : isRevealed ? ' revealed' : hasVote ? ' voted' : '');
-
-        if (p.avatar) {
-          const av = document.createElement('div');
-          av.className = 'p-avatar';
-          av.textContent = p.avatar;
-          wrap.appendChild(av);
-        }
-
-        const nameEl = document.createElement('div');
-        nameEl.className = 'participant-name';
-        nameEl.innerHTML = p.name + (isMe ? ' <em>(du)</em>' : '');
-        wrap.appendChild(nameEl);
-
-        if (isObs) {
-          const badge = document.createElement('div');
-          badge.className = 'observer-badge';
-          badge.textContent = '👁️ Beobachter';
-          wrap.appendChild(badge);
-        } else {
-          const changedAt = changedVoters.get(uid);
-          const isChanged = isRevealed && changedAt !== undefined && (Date.now() - changedAt < 5000);
-          const voteEl = document.createElement('div');
-          voteEl.className = 'vote-card' +
-            (isChanged ? ' changed' : isRevealed ? ' revealed' : hasVote ? ' voted' : '');
-          voteEl.textContent = isRevealed ? (p.vote || '—') : hasVote ? '✓' : '…';
-          wrap.appendChild(voteEl);
-        }
-
-        pgrid.appendChild(wrap);
+      osection.style.display = observerEntries.length ? '' : 'none';
+      observerEntries.forEach(([uid, p]) => {
+        const chip = document.createElement('div');
+        chip.className = 'observer-chip';
+        const isMe = uid === userId;
+        chip.innerHTML =
+          (p.avatar ? `<span>${p.avatar}</span>` : '') +
+          `<span>${p.name}${isMe ? ' <em style="color:#e94560;font-style:normal;font-size:0.75rem">(du)</em>' : ''}</span>`;
+        ogrid.appendChild(chip);
       });
+    }
+
+    function buildVoterCard(uid, p) {
+      const hasVote  = !!p.vote;
+      const isMe     = uid === userId;
+      const changedAt = changedVoters.get(uid);
+      const isChanged = isRevealed && changedAt !== undefined && (Date.now() - changedAt < 5000);
+
+      const wrap = document.createElement('div');
+      wrap.className = 'participant' + (isRevealed ? ' revealed' : hasVote ? ' voted' : '');
+
+      if (p.avatar) {
+        const av = document.createElement('div');
+        av.className = 'p-avatar';
+        av.textContent = p.avatar;
+        wrap.appendChild(av);
+      }
+
+      const nameEl = document.createElement('div');
+      nameEl.className = 'participant-name';
+      nameEl.innerHTML = p.name + (isMe ? ' <em>(du)</em>' : '');
+      wrap.appendChild(nameEl);
+
+      const voteEl = document.createElement('div');
+      voteEl.className = 'vote-card' +
+        (isChanged ? ' changed' : isRevealed ? ' revealed' : hasVote ? ' voted' : '');
+      voteEl.textContent = isRevealed ? (p.vote || '—') : hasVote ? '✓' : '…';
+      wrap.appendChild(voteEl);
+
+      return wrap;
     }
 
     // ── Reveal button ─────────────────────────────────────
@@ -807,10 +859,12 @@
 
       if (nums.length === 0) {
         document.getElementById('resultsAvg').textContent = '—';
+        currentAvg = '—';
       } else {
         const avg = nums.reduce((s, v) => s + v, 0) / nums.length;
-        document.getElementById('resultsAvg').textContent =
-          Number.isInteger(avg) ? avg : avg.toFixed(1);
+        const avgText = Number.isInteger(avg) ? String(avg) : avg.toFixed(1);
+        document.getElementById('resultsAvg').textContent = avgText;
+        currentAvg = avgText;
       }
 
       const chips = document.getElementById('resultsVotes');
@@ -881,20 +935,11 @@
     function renderReactions(voterEntries) {
       const container = document.getElementById('reactionBtns');
       container.innerHTML = '';
-
       const nonVoters = voterEntries.filter(([,p]) => !p.vote);
-      const showMuted = !isRevealed
-                     && myRole !== 'observer'
-                     && nonVoters.length === 1
-                     && nonVoters[0][0] === userId;
-
-      REACTIONS.forEach(r => {
-        container.appendChild(makeReactionBtn(r.text, false));
-      });
-
-      if (showMuted) {
-        container.appendChild(makeReactionBtn(REACTION_MUTED.text, true));
-      }
+      const showMuted = !isRevealed && myRole !== 'observer'
+                     && nonVoters.length === 1 && nonVoters[0][0] === userId;
+      REACTIONS.forEach(r => container.appendChild(makeReactionBtn(r.text, false)));
+      if (showMuted) container.appendChild(makeReactionBtn(REACTION_MUTED.text, true));
     }
 
     function makeReactionBtn(text, muted) {
@@ -913,15 +958,58 @@
     function showBubble(bubble) {
       document.querySelectorAll('.speech-bubble').forEach(b => b.remove());
       if (bubbleTimer) clearTimeout(bubbleTimer);
-
       const el = document.createElement('div');
       el.className = 'speech-bubble';
       el.innerHTML =
         `<div class="bubble-author">${bubble.author} sagt:</div>` +
         `<div class="bubble-text">${bubble.text}</div>`;
       document.body.appendChild(el);
-
       bubbleTimer = setTimeout(() => el.remove(), 5200);
+    }
+
+    // ── Tröte ─────────────────────────────────────────────
+    function sendToot() {
+      roomRef.child('toot').set({ ts: Date.now(), author: myName });
+    }
+
+    function triggerToot() {
+      playToot();
+      showTootEmoji();
+      shakeScreen();
+    }
+
+    function playToot() {
+      try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        [[440, 0], [330, 0.18], [440, 0.36]].forEach(([freq, delay]) => {
+          const osc  = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(freq, ctx.currentTime + delay);
+          gain.gain.setValueAtTime(0.28, ctx.currentTime + delay);
+          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + 0.22);
+          osc.start(ctx.currentTime + delay);
+          osc.stop(ctx.currentTime + delay + 0.22);
+        });
+      } catch(e) {}
+    }
+
+    function showTootEmoji() {
+      document.querySelectorAll('.toot-display').forEach(e => e.remove());
+      const el = document.createElement('div');
+      el.className = 'toot-display';
+      el.textContent = '📯';
+      document.body.appendChild(el);
+      setTimeout(() => el.remove(), 2600);
+    }
+
+    function shakeScreen() {
+      document.body.classList.remove('shaking');
+      void document.body.offsetWidth;
+      document.body.classList.add('shaking');
+      setTimeout(() => document.body.classList.remove('shaking'), 700);
     }
 
     // ── Consensus & party ─────────────────────────────────
@@ -933,11 +1021,9 @@
     function triggerParty() {
       if (partyFired) return;
       partyFired = true;
-
       const banner = document.getElementById('consensusBanner');
       banner.classList.add('show');
       bannerTimer = setTimeout(() => banner.classList.remove('show'), 3500);
-
       partyWraps = [];
       const pool = ['🎉','🎊','✨','🥳','🎈'];
       for (let i = 0; i < 20; i++) {
@@ -946,14 +1032,12 @@
         wrap.style.left = `${5 + Math.random()*90}%`;
         wrap.style.animationDuration = `${2 + Math.random()*2}s`;
         wrap.style.animationDelay    = `${i*0.12}s`;
-
         const el = document.createElement('span');
         el.className = 'party-emoji';
         el.textContent = pool[i % pool.length];
         el.style.fontSize          = `${1.4 + Math.random()*1.2}rem`;
         el.style.animationDuration = `${2.2 + Math.random()*1.8}s`;
         el.style.animationDelay    = `${i*0.12}s`;
-
         wrap.appendChild(el);
         document.body.appendChild(wrap);
         partyWraps.push(wrap);
@@ -976,17 +1060,43 @@
     }
 
     function resetVotes() {
-      // Clear all votes in Firebase → all clients sync via listener
+      // Save current round to history before clearing
+      if (isRevealed && currentAvg !== '—') {
+        roomRef.child('history').once('value', snap => {
+          const hist  = Array.isArray(snap.val()) ? snap.val() : [];
+          const entry = { title: currentTitle || null, avg: currentAvg, ts: Date.now() };
+          roomRef.child('history').set([entry, ...hist].slice(0, 3));
+        });
+      }
+      // Clear title
+      roomRef.child('title').remove();
+      // Clear votes
       db.ref(`rooms/${roomId}/participants`).once('value', snap => {
         const updates = {};
         Object.keys(snap.val() || {}).forEach(uid => { updates[`${uid}/vote`] = null; });
         db.ref(`rooms/${roomId}/participants`).update(updates);
       });
       roomRef.update({ revealed: false });
-      // myVote reset happens in the listener via Firebase sync
       clearParty();
     }
 
+    // ── History ───────────────────────────────────────────
+    function renderHistory(history) {
+      const section = document.getElementById('historySection');
+      if (!history.length) { section.style.display = 'none'; return; }
+      section.style.display = '';
+      const labels = ['Letzte Schätzung', 'Vorletzte Schätzung', 'Vorvorletzte Schätzung'];
+      const tbody = document.getElementById('historyBody');
+      tbody.innerHTML = '';
+      history.forEach((entry, i) => {
+        const tr = document.createElement('tr');
+        const title = entry.title || labels[i] || `Schätzung ${i+1}`;
+        tr.innerHTML = `<td>${title}</td><td>${entry.avg}</td>`;
+        tbody.appendChild(tr);
+      });
+    }
+
+    // ── Copy link ─────────────────────────────────────────
     function copyLink() {
       const url = `${location.origin}${location.pathname.replace('room.html','')}room.html?room=${roomId}`;
       navigator.clipboard.writeText(url).then(() => {
@@ -1000,6 +1110,6 @@
     function hide(id) { document.getElementById(id).style.display = 'none'; }
   </script>
 
-  <div class="version">v1.9</div>
+  <div class="version">v2.0</div>
 </body>
 </html>
