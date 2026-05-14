@@ -43,14 +43,15 @@
     .copy-btn:hover { background: #f1f5f9; color: #0f172a; }
 
     /* ── Dark toggle ── */
-    .dark-toggle {
+    .dark-toggle, .back-btn {
       background: transparent; border: 1.5px solid #e2e8f0;
       border-radius: 8px; width: 34px; height: 34px;
       cursor: pointer; font-size: 1rem;
       display: flex; align-items: center; justify-content: center;
       transition: all 0.15s; line-height: 1;
+      color: #64748b; text-decoration: none;
     }
-    .dark-toggle:hover { background: #f1f5f9; }
+    .dark-toggle:hover, .back-btn:hover { background: #f1f5f9; color: #0f172a; }
 
     /* ── Main ── */
     main { max-width: 960px; margin: 0 auto; padding: 36px 20px 60px; }
@@ -393,8 +394,10 @@
     html.dark .room-code   { background: #0f172a; border-color: #334155; color: #f1f5f9; }
     html.dark .copy-btn    { border-color: #334155; color: #94a3b8; }
     html.dark .copy-btn:hover { background: #334155; color: #f1f5f9; }
-    html.dark .dark-toggle { border-color: #334155; color: #94a3b8; }
-    html.dark .dark-toggle:hover { background: #334155; }
+    html.dark .dark-toggle,
+    html.dark .back-btn     { border-color: #334155; color: #94a3b8; }
+    html.dark .dark-toggle:hover,
+    html.dark .back-btn:hover { background: #334155; color: #f1f5f9; }
     html.dark .section-label { color: #64748b; }
     html.dark .title-input { background: #1e293b; border-color: #334155; color: #f1f5f9; }
     html.dark .title-input:focus { border-color: #e94560; }
@@ -472,6 +475,7 @@
       <span class="room-label">Raum</span>
       <span class="room-code" id="displayRoomId">—</span>
       <button class="copy-btn" id="copyBtn" onclick="copyLink()">🔗 Link kopieren</button>
+      <a class="back-btn" href="index.html" title="Zur Startseite">🏠</a>
       <button class="dark-toggle" id="darkToggle" onclick="toggleDark()">🌙</button>
     </div>
   </header>
@@ -684,7 +688,7 @@
 
     // ── Enter room ────────────────────────────────────────
     function enterRoom() {
-      localStorage.setItem(storageKey, JSON.stringify({ id: userId, name: myName, role: myRole, avatar: myAvatar }));
+      localStorage.setItem(storageKey, JSON.stringify({ id: userId, name: myName, role: myRole, avatar: myAvatar, ts: Date.now() }));
 
       if (myRole === 'observer') {
         hide('voterSection');
