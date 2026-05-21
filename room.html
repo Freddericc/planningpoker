@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Planning Poker – Raum</title>
+  <link rel="icon" type="image/svg+xml" href="icon.svg">
   <script>if(localStorage.getItem('pp_dark')==='1')document.documentElement.classList.add('dark');</script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -27,7 +28,8 @@
       gap: 10px;
       box-shadow: 0 1px 3px rgba(0,0,0,0.05);
     }
-    .header-logo { font-size: 1.2rem; font-weight: 700; color: #0f172a; }
+    .header-logo { font-size: 1.2rem; font-weight: 700; color: #0f172a; display: flex; align-items: center; gap: 8px; }
+    .header-icon { width: 28px; height: 28px; border-radius: 6px; flex-shrink: 0; }
     .header-right { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
     .room-label { color: #94a3b8; font-size: 0.85rem; }
     .room-code {
@@ -447,14 +449,14 @@
   <!-- Name + role dialog -->
   <div class="overlay" id="nameOverlay">
     <div class="dialog">
-      <div class="icon">🃏</div>
+      <div class="icon"><img src="icon.svg" style="width:56px;height:56px;border-radius:12px;" alt=""></div>
       <h2>Raum beitreten</h2>
       <p>Wie möchtest du teilnehmen?</p>
       <input type="text" id="nameInput" placeholder="Dein Name" maxlength="30" autofocus>
       <div class="ov-avatar-grid" id="overlayAvatarGrid"></div>
       <div class="role-grid">
         <button class="role-btn active" id="overlay-voter" onclick="setOverlayRole('voter')">
-          <span class="role-icon">🃏</span>
+          <span class="role-icon"><img src="icon.svg" style="width:28px;height:28px;border-radius:6px;vertical-align:middle;" alt=""></span>
           <span class="role-name">Schätzer</span>
           <span class="role-desc">Entwickler · Team</span>
         </button>
@@ -470,7 +472,7 @@
 
   <!-- Header -->
   <header>
-    <div class="header-logo">🃏 Planning Poker</div>
+    <div class="header-logo"><img src="icon.svg" class="header-icon" alt=""> Planning Poker</div>
     <div class="header-right">
       <span class="room-label">Raum</span>
       <span class="room-code" id="displayRoomId">—</span>
