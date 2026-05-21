@@ -1,18 +1,22 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
-  <rect width="100" height="100" rx="20" fill="#0d0d0d"/>
-  <!-- Left figure -->
-  <g fill="#8cc63f">
-    <circle cx="29" cy="37" r="10.5"/>
-    <path d="M7 76 C7 55 17 52 29 52 C41 52 51 55 51 76Z"/>
+  <rect width="100" height="100" rx="18" fill="#111"/>
+
+  <!-- Left card (rotated -22°, pivot near bottom-center) -->
+  <g transform="rotate(-22, 50, 96)">
+    <rect x="31" y="27" width="38" height="55" rx="5" fill="#111" stroke="#8cc63f" stroke-width="3"/>
+    <circle cx="50" cy="44" r="8" fill="#8cc63f"/>
+    <path d="M34 70 Q34 59 50 59 Q66 59 66 70Z" fill="#8cc63f"/>
   </g>
-  <!-- Right figure -->
-  <g fill="#8cc63f">
-    <circle cx="71" cy="37" r="10.5"/>
-    <path d="M49 76 C49 55 59 52 71 52 C83 52 93 55 93 76Z"/>
+
+  <!-- Right card (rotated +22°, same pivot) -->
+  <g transform="rotate(22, 50, 96)">
+    <rect x="31" y="27" width="38" height="55" rx="5" fill="#111" stroke="#8cc63f" stroke-width="3"/>
+    <circle cx="50" cy="44" r="8" fill="#8cc63f"/>
+    <path d="M34 70 Q34 59 50 59 Q66 59 66 70Z" fill="#8cc63f"/>
   </g>
-  <!-- Center figure (larger, in front) -->
-  <g fill="#8cc63f">
-    <circle cx="50" cy="31" r="13.5"/>
-    <path d="M22 79 C22 58 34 55 50 55 C66 55 78 58 78 79Z"/>
-  </g>
+
+  <!-- Center card (upright, white border) -->
+  <rect x="31" y="22" width="38" height="57" rx="5" fill="#111" stroke="#ffffff" stroke-width="3.5"/>
+  <circle cx="50" cy="42" r="9" fill="#ffffff"/>
+  <path d="M33 68 Q33 58 50 58 Q67 58 67 68Z" fill="#ffffff"/>
 </svg>
