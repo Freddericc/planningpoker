@@ -1,22 +1,22 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
-  <rect width="100" height="100" rx="18" fill="#111"/>
+  <rect width="100" height="100" fill="#000"/>
 
-  <!-- Left card (rotated -22°, pivot near bottom-center) -->
-  <g transform="rotate(-22, 50, 96)">
-    <rect x="31" y="27" width="38" height="55" rx="5" fill="#111" stroke="#8cc63f" stroke-width="3"/>
-    <circle cx="50" cy="44" r="8" fill="#8cc63f"/>
-    <path d="M34 70 Q34 59 50 59 Q66 59 66 70Z" fill="#8cc63f"/>
+  <!-- Left card: solid green, fanned left -->
+  <g transform="rotate(-22, 50, 95)">
+    <rect x="31" y="20" width="38" height="57" rx="6" fill="#8cc63f"/>
+    <circle cx="50" cy="41" r="10" fill="#111"/>
+    <path d="M30 68 Q30 57 50 57 Q70 57 70 68Z" fill="#111"/>
   </g>
 
-  <!-- Right card (rotated +22°, same pivot) -->
-  <g transform="rotate(22, 50, 96)">
-    <rect x="31" y="27" width="38" height="55" rx="5" fill="#111" stroke="#8cc63f" stroke-width="3"/>
-    <circle cx="50" cy="44" r="8" fill="#8cc63f"/>
-    <path d="M34 70 Q34 59 50 59 Q66 59 66 70Z" fill="#8cc63f"/>
+  <!-- Right card: solid green, fanned right -->
+  <g transform="rotate(22, 50, 95)">
+    <rect x="31" y="20" width="38" height="57" rx="6" fill="#8cc63f"/>
+    <circle cx="50" cy="41" r="10" fill="#111"/>
+    <path d="M30 68 Q30 57 50 57 Q70 57 70 68Z" fill="#111"/>
   </g>
 
-  <!-- Center card (upright, white border) -->
-  <rect x="31" y="22" width="38" height="57" rx="5" fill="#111" stroke="#ffffff" stroke-width="3.5"/>
-  <circle cx="50" cy="42" r="9" fill="#ffffff"/>
-  <path d="M33 68 Q33 58 50 58 Q67 58 67 68Z" fill="#ffffff"/>
+  <!-- Center card: solid white, upright, on top -->
+  <rect x="31" y="14" width="38" height="59" rx="6" fill="#fff"/>
+  <circle cx="50" cy="38" r="11" fill="#111"/>
+  <path d="M30 68 Q30 56 50 56 Q70 56 70 68Z" fill="#111"/>
 </svg>
