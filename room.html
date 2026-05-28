@@ -710,8 +710,14 @@
       }
 
       participantRef = db.ref(`rooms/${roomId}/participants/${userId}`);
-      participantRef.onDisconnect().remove();
-      participantRef.set({ name: myName, vote: null, role: myRole, avatar: myAvatar });
+
+      // Re-register presence on every (re-)connect so brief network
+      // drops don't permanently remove the participant from the room.
+      db.ref('.info/connected').on('value', snap => {
+        if (!snap.val()) return;
+        participantRef.onDisconnect().remove();
+        participantRef.set({ name: myName, vote: myVote, role: myRole, avatar: myAvatar });
+      });
 
       // Title input sync
       const titleInputEl = document.getElementById('titleInput');
