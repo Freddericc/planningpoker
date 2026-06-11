@@ -138,11 +138,18 @@
       background: #fff; border: 1.5px solid #e2e8f0;
       border-radius: 12px; padding: 16px 14px;
       min-width: 120px; text-align: center;
-      transition: border-color 0.2s;
+      transition: border-color 0.2s, opacity 0.3s;
       box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+      position: relative;
     }
-    .participant.voted   { border-color: #86efac; }
+    .participant.voted    { border-color: #86efac; }
     .participant.revealed { border-color: #e94560; }
+    .participant.offline  { opacity: 0.4; }
+    .participant.offline::after {
+      content: '●'; color: #94a3b8; font-size: 0.5rem;
+      position: absolute; top: 7px; right: 9px;
+      line-height: 1;
+    }
     .participant-name {
       font-size: 0.85rem; color: #64748b;
       margin-bottom: 12px; white-space: nowrap;
@@ -584,6 +591,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
   <script src="firebase-config.js"></script>
+  <script src="logger.js"></script>
 
   <script>
     const CARDS = ['1', '2', '3', '5', '8', '13', '?'];
@@ -620,6 +628,35 @@
     let partyWraps = [], bannerTimer = null;
     let currentTitle = '', currentAvg = '—';
     let tootCooldown = false;
+
+    // ── Abuse / rate-limit guards ─────────────────────────
+    // Shared AudioContext — reuse instead of creating one per toot click
+    let _audioCtx = null;
+    function getAudioCtx() {
+      if (!_audioCtx || _audioCtx.state === 'closed') {
+        _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (_audioCtx.state === 'suspended') _audioCtx.resume();
+      return _audioCtx;
+    }
+
+    // Throttle: prevents fn from firing more than once per `ms` milliseconds
+    const _throttleTs = {};
+    function throttle(key, ms, fn) {
+      const now = Date.now();
+      if (_throttleTs[key] && now - _throttleTs[key] < ms) return false;
+      _throttleTs[key] = now;
+      fn();
+      return true;
+    }
+
+    // Op-guard: prevents concurrent async Firebase operations
+    const _opLock = {};
+    async function withLock(key, fn) {
+      if (_opLock[key]) return;
+      _opLock[key] = true;
+      try { await fn(); } finally { _opLock[key] = false; }
+    }
 
     // ── Init ─────────────────────────────────────────────
     document.getElementById('displayRoomId').textContent = roomId;
@@ -711,12 +748,18 @@
 
       participantRef = db.ref(`rooms/${roomId}/participants/${userId}`);
 
-      // Re-register presence on every (re-)connect so brief network
-      // drops don't permanently remove the participant from the room.
+      // On every (re-)connect: mark online, register offline-flag on disconnect.
+      // Never remove on disconnect — keeps votes intact during brief outages.
       db.ref('.info/connected').on('value', snap => {
         if (!snap.val()) return;
-        participantRef.onDisconnect().remove();
-        participantRef.set({ name: myName, vote: myVote, role: myRole, avatar: myAvatar });
+        participantRef.onDisconnect().update({
+          online:   false,
+          lastSeen: firebase.database.ServerValue.TIMESTAMP,
+        });
+        participantRef.set({
+          name: myName, vote: myVote, role: myRole,
+          avatar: myAvatar, online: true,
+        }).catch(e => logError('Presence write failed', { code: e.code }));
       });
 
       // Title input sync
@@ -733,7 +776,21 @@
         const data = snap.val() || {};
         isRevealed = data.revealed || false;
         const participants = data.participants || {};
-        const voterEntries = Object.entries(participants).filter(([,p]) => p.role !== 'observer');
+
+        // Cleanup: remove participants offline for more than 10 minutes
+        const staleMs = 10 * 60 * 1000;
+        const now = Date.now();
+        Object.entries(participants).forEach(([uid, p]) => {
+          if (p.online === false && p.lastSeen && (now - p.lastSeen) > staleMs) {
+            db.ref(`rooms/${roomId}/participants/${uid}`).remove();
+          }
+        });
+
+        // For voting logic, ignore offline participants
+        const activeParticipants = Object.fromEntries(
+          Object.entries(participants).filter(([, p]) => p.online !== false)
+        );
+        const voterEntries = Object.entries(activeParticipants).filter(([,p]) => p.role !== 'observer');
         const voters = voterEntries.map(([,p]) => p);
 
         // Sync myVote from Firebase (handles remote reset)
@@ -756,10 +813,10 @@
         currentTitle = newTitle;
         if (titleInputEl !== document.activeElement) titleInputEl.value = newTitle;
 
-        renderParticipants(participants);
+        renderParticipants(participants);   // all — incl. offline (shown dimmed)
         updateCardState();
-        updateRevealBtn(voters);
-        renderReactions(voterEntries);
+        updateRevealBtn(voters);            // only active voters
+        renderReactions(voterEntries);      // only active voters
 
         // Auto-reveal when all voters voted
         if (!isRevealed) {
@@ -796,9 +853,12 @@
     // ── Card selection ────────────────────────────────────
     function selectCard(val) {
       if (myRole === 'observer') return;
-      myVote = myVote === val ? null : val;
-      participantRef.update({ vote: myVote });
-      updateCardState();
+      // Throttle: max one vote-change per 400 ms to prevent Firebase flooding
+      throttle('selectCard', 400, () => {
+        myVote = myVote === val ? null : val;
+        participantRef.update({ vote: myVote });
+        updateCardState();
+      });
     }
 
     function updateCardState() {
@@ -839,13 +899,15 @@
     }
 
     function buildVoterCard(uid, p) {
-      const hasVote  = !!p.vote;
-      const isMe     = uid === userId;
+      const hasVote   = !!p.vote;
+      const isMe      = uid === userId;
+      const isOffline = p.online === false;
       const changedAt = changedVoters.get(uid);
       const isChanged = isRevealed && changedAt !== undefined && (Date.now() - changedAt < 5000);
 
       const wrap = document.createElement('div');
-      wrap.className = 'participant' + (isRevealed ? ' revealed' : hasVote ? ' voted' : '');
+      const stateClass = isRevealed ? ' revealed' : hasVote ? ' voted' : '';
+      wrap.className = 'participant' + stateClass + (isOffline ? ' offline' : '');
 
       if (p.avatar) {
         const av = document.createElement('div');
@@ -975,7 +1037,9 @@
     }
 
     function sendReaction(text) {
-      roomRef.child('bubble').set({ text, author: myName, ts: Date.now() });
+      throttle('reaction', 1500, () => {
+        roomRef.child('bubble').set({ text, author: myName, ts: Date.now() });
+      });
     }
 
     // ── Speech bubble ─────────────────────────────────────
@@ -1123,8 +1187,7 @@
 
     function playToot() {
       try {
-        const ctx = new (window.AudioContext || window.webkitAudioContext)();
-        TOOT_SOUNDS[Math.floor(Math.random() * TOOT_SOUNDS.length)](ctx);
+        TOOT_SOUNDS[Math.floor(Math.random() * TOOT_SOUNDS.length)](getAudioCtx());
       } catch(e) {}
     }
 
@@ -1189,28 +1252,38 @@
 
     // ── Controls ──────────────────────────────────────────
     function revealVotes() {
-      roomRef.update({ revealed: true });
+      withLock('reveal', async () => {
+        await roomRef.update({ revealed: true });
+      });
     }
 
     function resetVotes() {
-      // Save current round to history before clearing
-      if (isRevealed && currentAvg !== '—') {
-        roomRef.child('history').once('value', snap => {
-          const hist  = Array.isArray(snap.val()) ? snap.val() : [];
-          const entry = { title: currentTitle || null, avg: currentAvg, ts: Date.now() };
-          roomRef.child('history').set([entry, ...hist].slice(0, 3));
-        });
-      }
-      // Clear title
-      roomRef.child('title').remove();
-      // Clear votes
-      db.ref(`rooms/${roomId}/participants`).once('value', snap => {
-        const updates = {};
-        Object.keys(snap.val() || {}).forEach(uid => { updates[`${uid}/vote`] = null; });
-        db.ref(`rooms/${roomId}/participants`).update(updates);
+      withLock('reset', async () => {
+        // Disable buttons for the duration
+        const revBtn   = document.getElementById('revealBtn');
+        const resetBtn = document.querySelector('.btn-reset');
+        if (revBtn)   revBtn.disabled   = true;
+        if (resetBtn) resetBtn.disabled = true;
+        try {
+          // Save current round to history before clearing
+          if (isRevealed && currentAvg !== '—') {
+            const snap = await roomRef.child('history').once('value');
+            const hist  = Array.isArray(snap.val()) ? snap.val() : [];
+            const entry = { title: currentTitle || null, avg: currentAvg, ts: Date.now() };
+            await roomRef.child('history').set([entry, ...hist].slice(0, 3));
+          }
+          // Clear title + votes + revealed atomically
+          const partSnap = await db.ref(`rooms/${roomId}/participants`).once('value');
+          const updates  = {};
+          Object.keys(partSnap.val() || {}).forEach(uid => { updates[`${uid}/vote`] = null; });
+          await db.ref(`rooms/${roomId}/participants`).update(updates);
+          await roomRef.update({ revealed: false, title: null });
+          clearParty();
+        } finally {
+          // Re-enable reset; reveal re-enables via updateRevealBtn
+          if (resetBtn) resetBtn.disabled = false;
+        }
       });
-      roomRef.update({ revealed: false });
-      clearParty();
     }
 
     // ── History ───────────────────────────────────────────

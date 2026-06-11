@@ -333,6 +333,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
   <script src="firebase-config.js"></script>
+  <script src="logger.js"></script>
 
   <script>
     const AVATARS = [
@@ -454,7 +455,11 @@
       btn.textContent = 'Wird gelöscht…';
       btn.disabled = true;
       try {
-        await firebase.database().ref('rooms').remove();
+        const db = firebase.database();
+
+        // Try deleting the whole rooms subtree at once
+        await db.ref('rooms').remove();
+
         // Clear local pp_* entries (except dark mode pref)
         Object.keys(localStorage)
           .filter(k => k.startsWith('pp_') && k !== 'pp_dark')
@@ -462,7 +467,11 @@
         document.getElementById('lastRoomCard').style.display = 'none';
         closeDeleteModal();
       } catch(e) {
-        btn.textContent = '⚠️ Fehler – nochmal?';
+        logError('Delete all rooms failed', { code: e.code, detail: e.message });
+        const msg = e.code === 'PERMISSION_DENIED'
+          ? '🔒 Keine Berechtigung – Regeln prüfen'
+          : '⚠️ Fehler – nochmal?';
+        btn.textContent = msg;
         btn.disabled = false;
       }
     }
