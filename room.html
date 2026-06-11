@@ -378,7 +378,7 @@
     /* ── History table ── */
     .history-section { margin-top: 8px; }
     .history-table {
-      width: 100%; border-collapse: collapse;
+      width: auto; border-collapse: collapse;
       background: #fff; border-radius: 10px;
       overflow: hidden; border: 1px solid #e2e8f0;
       font-size: 0.88rem;
@@ -392,7 +392,7 @@
     }
     .history-table td { padding: 10px 14px; border-bottom: 1px solid #f1f5f9; color: #0f172a; }
     .history-table tr:last-child td { border-bottom: none; }
-    .history-table td:last-child { font-weight: 700; color: #e94560; text-align: right; }
+    .history-table td:last-child { font-weight: 700; color: #e94560; text-align: left; padding-left: 20px; white-space: nowrap; }
 
     .version {
       position: fixed; bottom: 12px; left: 16px;
@@ -572,7 +572,7 @@
         <thead>
           <tr>
             <th>Story / Aufgabe</th>
-            <th style="text-align:right">Durchschnitt</th>
+            <th style="padding-left:20px">Durchschnitt</th>
           </tr>
         </thead>
         <tbody id="historyBody"></tbody>
