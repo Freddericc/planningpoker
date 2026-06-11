@@ -90,14 +90,25 @@
     .poker-card.selected { background: #e94560; border-color: #e94560; color: #fff; transform: translateY(-10px); box-shadow: 0 8px 24px rgba(233,69,96,0.4); }
     .poker-card.disabled { opacity: 0.35; cursor: not-allowed; transform: none !important; box-shadow: none; }
 
-    /* ── Observer notice ── */
+    /* ── Observer notice (inline badge next to section label) ── */
+    .observers-header {
+      display: flex; align-items: center; gap: 12px; margin-bottom: 14px;
+    }
+    .observers-header .section-label { margin-bottom: 0; }
     .observer-notice {
-      display: none; background: #fff; border: 1.5px solid #e2e8f0;
-      border-radius: 12px; padding: 20px 24px; margin-bottom: 40px;
-      color: #64748b; font-size: 0.95rem; align-items: center; gap: 12px;
+      display: none; align-items: center; gap: 6px;
+      font-size: 0.78rem; color: #64748b;
+      background: #f1f5f9; border: 1px solid #e2e8f0;
+      border-radius: 20px; padding: 3px 12px;
     }
     .observer-notice.visible { display: flex; }
-    .observer-notice span { font-size: 1.6rem; }
+
+    /* ── Bottom 50/50 grid (Reaktionen + Letzte Schätzungen) ── */
+    .bottom-grid {
+      display: flex; gap: 32px; align-items: flex-start; margin-bottom: 32px;
+    }
+    .bottom-grid > * { flex: 1; min-width: 0; }
+    @media (max-width: 600px) { .bottom-grid { flex-direction: column; gap: 24px; } }
 
     /* ── Results ── */
     .results-box {
@@ -219,7 +230,7 @@
     .btn-toot:active { transform: scale(0.95); }
 
     /* ── Reactions ── */
-    .reactions-section { margin-bottom: 40px; }
+    .reactions-section { margin-bottom: 0; }
     .reaction-btns { display: flex; flex-wrap: wrap; gap: 8px; }
     .reaction-btn {
       padding: 8px 14px; border: 1.5px solid #e2e8f0;
@@ -418,7 +429,7 @@
     html.dark .title-input::placeholder { color: #475569; font-weight: 400; }
     html.dark .poker-card  { background: #1e293b; border-color: #334155; color: #94a3b8; box-shadow: none; }
     html.dark .poker-card:hover { border-color: #e94560; color: #e94560; }
-    html.dark .observer-notice { background: #1e293b; border-color: #334155; color: #94a3b8; }
+    html.dark .observer-notice { background: #0f172a; border-color: #334155; color: #64748b; }
     html.dark .results-box { background: #1e293b; border-color: #334155; box-shadow: none; }
     html.dark .results-unit { color: #64748b; }
     html.dark .vote-chip   { background: #0f172a; border-color: #334155; color: #94a3b8; }
@@ -513,15 +524,6 @@
       <div class="cards-grid" id="cardsGrid"></div>
     </div>
 
-    <!-- Observer notice -->
-    <div class="observer-notice" id="observerNotice">
-      <span>👁️</span>
-      <div>
-        <strong>Du bist als Beobachter dabei.</strong><br>
-        <span style="font-size:0.88rem">Du kannst alle Schätzungen sehen, aber nicht abstimmen.</span>
-      </div>
-    </div>
-
     <!-- Results -->
     <div class="results-box" id="resultsBox">
       <div class="section-label" style="margin-bottom:10px">Ergebnis</div>
@@ -536,16 +538,19 @@
     <!-- Consensus banner (fixed) -->
     <div class="consensus-banner" id="consensusBanner">🎉 Konsens! Alle einig!</div>
 
+    <!-- Observers (above participants) -->
+    <div class="observers-section" id="observersSection" style="display:none">
+      <div class="observers-header">
+        <div class="section-label">Beobachter</div>
+        <div class="observer-notice" id="observerNotice">👁️ Du schaust nur zu</div>
+      </div>
+      <div class="observers-row" id="observersGrid"></div>
+    </div>
+
     <!-- Voters -->
     <div class="section-label">Teilnehmer</div>
     <div class="participants-grid" id="participantsGrid">
       <p class="waiting">Warte auf Teilnehmer…</p>
-    </div>
-
-    <!-- Observers strip -->
-    <div class="observers-section" id="observersSection" style="display:none">
-      <div class="section-label">Beobachter</div>
-      <div class="observers-row" id="observersGrid"></div>
     </div>
 
     <!-- Controls -->
@@ -559,24 +564,24 @@
       <button class="btn-toot" id="tootBtn" onclick="sendToot()" title="Tröte! – Bitte jetzt schätzen">📯</button>
     </div>
 
-    <!-- Reactions -->
-    <div class="reactions-section">
-      <div class="section-label">Reaktionen</div>
-      <div class="reaction-btns" id="reactionBtns"></div>
-    </div>
-
-    <!-- History -->
-    <div class="history-section" id="historySection" style="display:none">
-      <div class="section-label" style="margin-bottom:14px">Letzte Schätzungen</div>
-      <table class="history-table">
-        <thead>
-          <tr>
-            <th>Story / Aufgabe</th>
-            <th style="padding-left:20px">Durchschnitt</th>
-          </tr>
-        </thead>
-        <tbody id="historyBody"></tbody>
-      </table>
+    <!-- Reaktionen (links) + Letzte Schätzungen (rechts) — 50/50 -->
+    <div class="bottom-grid">
+      <div class="reactions-section">
+        <div class="section-label">Reaktionen</div>
+        <div class="reaction-btns" id="reactionBtns"></div>
+      </div>
+      <div class="history-section" id="historySection" style="display:none">
+        <div class="section-label" style="margin-bottom:14px">Letzte Schätzungen</div>
+        <table class="history-table">
+          <thead>
+            <tr>
+              <th>Story / Aufgabe</th>
+              <th style="padding-left:20px">Durchschnitt</th>
+            </tr>
+          </thead>
+          <tbody id="historyBody"></tbody>
+        </table>
+      </div>
     </div>
 
   </main>
@@ -738,6 +743,7 @@
       if (myRole === 'observer') {
         hide('voterSection');
         document.getElementById('observerNotice').classList.add('visible');
+        document.getElementById('observersSection').style.display = ''; // always show section for observers
       }
 
       participantRef = db.ref(`rooms/${roomId}/participants/${userId}`);
@@ -881,7 +887,7 @@
         voterEntries.forEach(([uid, p]) => pgrid.appendChild(buildVoterCard(uid, p)));
       }
 
-      osection.style.display = observerEntries.length ? '' : 'none';
+      osection.style.display = (observerEntries.length || myRole === 'observer') ? '' : 'none';
       observerEntries.forEach(([uid, p]) => {
         const chip = document.createElement('div');
         chip.className = 'observer-chip';
