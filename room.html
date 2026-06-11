@@ -144,12 +144,6 @@
     }
     .participant.voted    { border-color: #86efac; }
     .participant.revealed { border-color: #e94560; }
-    .participant.offline  { opacity: 0.4; }
-    .participant.offline::after {
-      content: '●'; color: #94a3b8; font-size: 0.5rem;
-      position: absolute; top: 7px; right: 9px;
-      line-height: 1;
-    }
     .participant-name {
       font-size: 0.85rem; color: #64748b;
       margin-bottom: 12px; white-space: nowrap;
@@ -870,15 +864,16 @@
 
     // ── Participants ──────────────────────────────────────
     function renderParticipants(participants) {
-      const pgrid   = document.getElementById('participantsGrid');
-      const ogrid   = document.getElementById('observersGrid');
+      const pgrid    = document.getElementById('participantsGrid');
+      const ogrid    = document.getElementById('observersGrid');
       const osection = document.getElementById('observersSection');
       pgrid.innerHTML = '';
       ogrid.innerHTML = '';
 
-      const entries = Object.entries(participants);
-      const voterEntries    = entries.filter(([,p]) => p.role !== 'observer');
-      const observerEntries = entries.filter(([,p]) => p.role === 'observer');
+      // Skip any corrupted/incomplete entries (no name = not fully joined yet)
+      const valid           = Object.entries(participants).filter(([, p]) => p && p.name);
+      const voterEntries    = valid.filter(([, p]) => p.role !== 'observer');
+      const observerEntries = valid.filter(([, p]) => p.role === 'observer');
 
       if (!voterEntries.length) {
         pgrid.innerHTML = '<p class="waiting">Warte auf Teilnehmer…</p>';
@@ -891,23 +886,23 @@
         const chip = document.createElement('div');
         chip.className = 'observer-chip';
         const isMe = uid === userId;
+        const name = p.name || '?';
         chip.innerHTML =
           (p.avatar ? `<span>${p.avatar}</span>` : '') +
-          `<span>${p.name}${isMe ? ' <em style="color:#e94560;font-style:normal;font-size:0.75rem">(du)</em>' : ''}</span>`;
+          `<span>${name}${isMe ? ' <em style="color:#e94560;font-style:normal;font-size:0.75rem">(du)</em>' : ''}</span>`;
         ogrid.appendChild(chip);
       });
     }
 
     function buildVoterCard(uid, p) {
-      const hasVote   = !!p.vote;
+      const vote      = p.vote && p.vote !== 'undefined' ? p.vote : null;
+      const hasVote   = !!vote;
       const isMe      = uid === userId;
-      const isOffline = p.online === false;
       const changedAt = changedVoters.get(uid);
       const isChanged = isRevealed && changedAt !== undefined && (Date.now() - changedAt < 5000);
 
       const wrap = document.createElement('div');
-      const stateClass = isRevealed ? ' revealed' : hasVote ? ' voted' : '';
-      wrap.className = 'participant' + stateClass + (isOffline ? ' offline' : '');
+      wrap.className = 'participant' + (isRevealed ? ' revealed' : hasVote ? ' voted' : '');
 
       if (p.avatar) {
         const av = document.createElement('div');
@@ -918,13 +913,13 @@
 
       const nameEl = document.createElement('div');
       nameEl.className = 'participant-name';
-      nameEl.innerHTML = p.name + (isMe ? ' <em>(du)</em>' : '');
+      nameEl.innerHTML = (p.name || '?') + (isMe ? ' <em>(du)</em>' : '');
       wrap.appendChild(nameEl);
 
       const voteEl = document.createElement('div');
       voteEl.className = 'vote-card' +
         (isChanged ? ' changed' : isRevealed ? ' revealed' : hasVote ? ' voted' : '');
-      voteEl.textContent = isRevealed ? (p.vote || '—') : hasVote ? '✓' : '…';
+      voteEl.textContent = isRevealed ? (vote || '—') : hasVote ? '✓' : '…';
       wrap.appendChild(voteEl);
 
       return wrap;
@@ -956,9 +951,11 @@
       const chips = document.getElementById('resultsVotes');
       chips.innerHTML = '';
       voters.forEach(p => {
+        if (!p.name) return;                                    // skip incomplete entries
+        const v = p.vote && p.vote !== 'undefined' ? p.vote : '—';
         const chip = document.createElement('div');
         chip.className = 'vote-chip';
-        chip.innerHTML = `<strong>${p.vote || '—'}</strong> ${p.name}`;
+        chip.innerHTML = `<strong>${v}</strong> ${p.name}`;
         chips.appendChild(chip);
       });
 
