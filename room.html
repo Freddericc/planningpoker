@@ -90,6 +90,30 @@
     .poker-card.selected { background: #e94560; border-color: #e94560; color: #fff; transform: translateY(-10px); box-shadow: 0 8px 24px rgba(233,69,96,0.4); }
     .poker-card.disabled { opacity: 0.35; cursor: not-allowed; transform: none !important; box-shadow: none; }
 
+    /* ── Personentage number input ── */
+    .pt-input-wrap { display: flex; gap: 10px; align-items: center; margin-bottom: 40px; }
+    .pt-input {
+      width: 140px; padding: 14px 16px;
+      background: #fff; border: 2px solid #e2e8f0;
+      border-radius: 10px; color: #0f172a;
+      font-size: 1.5rem; font-weight: 700;
+      outline: none; transition: border-color 0.2s;
+      text-align: center;
+      -moz-appearance: textfield;
+    }
+    .pt-input::-webkit-outer-spin-button,
+    .pt-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+    .pt-input:focus { border-color: #e94560; }
+    .pt-input::placeholder { color: #cbd5e0; font-weight: 400; font-size: 1rem; }
+    .pt-submit {
+      padding: 14px 28px; background: #e94560; color: #fff;
+      border: none; border-radius: 10px; font-size: 1rem;
+      font-weight: 700; cursor: pointer; transition: background 0.15s;
+    }
+    .pt-submit:hover { background: #c73652; }
+    html.dark .pt-input { background: #1e293b; border-color: #334155; color: #f1f5f9; }
+    html.dark .pt-input:focus { border-color: #e94560; }
+
     /* ── Observer notice (inline badge next to section label) ── */
     .observers-header {
       display: flex; align-items: center; gap: 12px; margin-bottom: 14px;
@@ -555,6 +579,11 @@
     <div id="voterSection">
       <div class="section-label">Deine Schätzung</div>
       <div class="cards-grid" id="cardsGrid"></div>
+      <div class="pt-input-wrap" id="ptInputWrap" style="display:none">
+        <input type="number" id="ptInput" class="pt-input"
+               min="1" max="999" step="1" placeholder="1–999">
+        <button class="pt-submit" onclick="submitPtVote()">Schätzen ✓</button>
+      </div>
     </div>
 
     <!-- Results -->
@@ -654,6 +683,7 @@
     const urlName   = params.get('name')   || '';
     const urlRole   = params.get('role')   || '';
     const urlAvatar = params.get('avatar') || '';
+    const urlMode   = params.get('mode')   || 'fibonacci';
 
     let db, roomRef, participantRef;
     let userId, myName = '', myRole = 'voter', myAvatar = '😎', myVote = null;
@@ -664,6 +694,7 @@
     let currentTitle = '', currentAvg = '—';
     let tootCooldown = false;
     let lastElmoTs = 0;
+    let currentMode = 'fibonacci';
 
     // ── Abuse / rate-limit guards ─────────────────────────
     // Shared AudioContext — reuse instead of creating one per toot click
@@ -785,6 +816,11 @@
 
       participantRef = db.ref(`rooms/${roomId}/participants/${userId}`);
 
+      // Write estimation mode only if room has no mode yet (first joiner wins)
+      roomRef.child('mode').once('value', snap => {
+        if (!snap.exists()) roomRef.child('mode').set(urlMode);
+      });
+
       // On every (re-)connect: mark online, register offline-flag on disconnect.
       // Never remove on disconnect — keeps votes intact during brief outages.
       db.ref('.info/connected').on('value', snap => {
@@ -797,6 +833,11 @@
           name: myName, vote: myVote, role: myRole,
           avatar: myAvatar, online: true,
         }).catch(e => logError('Presence write failed', { code: e.code }));
+      });
+
+      // Personentage: submit on Enter
+      document.getElementById('ptInput').addEventListener('keydown', e => {
+        if (e.key === 'Enter') submitPtVote();
       });
 
       // Title input sync
@@ -812,6 +853,8 @@
       roomRef.on('value', snap => {
         const data = snap.val() || {};
         isRevealed = data.revealed || false;
+        const mode = data.mode || 'fibonacci';
+        if (mode !== currentMode) applyMode(mode);
         const participants = data.participants || {};
 
         // Cleanup: remove participants offline for more than 10 minutes
@@ -1018,7 +1061,9 @@
       const counts = {};
       voters.map(p => p.vote).filter(Boolean)
             .forEach(v => { counts[v] = (counts[v] || 0) + 1; });
-      const voted = CARDS.filter(c => counts[c]);
+      const voted = currentMode === 'personentage'
+        ? Object.keys(counts).sort((a, b) => parseFloat(a) - parseFloat(b))
+        : CARDS.filter(c => counts[c]);
 
       const wrap = document.getElementById('chartWrap');
       if (voted.length < 2) { wrap.style.display = 'none'; return; }
@@ -1400,6 +1445,33 @@
         const title = entry.title || labels[i] || `Schätzung ${i+1}`;
         tr.innerHTML = `<td>${title}</td><td>${entry.avg}</td>`;
         tbody.appendChild(tr);
+      });
+    }
+
+    // ── Estimation mode ───────────────────────────────────
+    function applyMode(mode) {
+      currentMode = mode;
+      const isPt = mode === 'personentage';
+      document.getElementById('cardsGrid').style.display    = isPt ? 'none' : '';
+      document.getElementById('ptInputWrap').style.display  = isPt ? ''     : 'none';
+      if (isPt && myVote) {
+        // Keep current vote visible in input on mode change
+        document.getElementById('ptInput').value = myVote;
+      }
+    }
+
+    function submitPtVote() {
+      if (myRole === 'observer') return;
+      const input = document.getElementById('ptInput');
+      const raw = parseInt(input.value, 10);
+      if (isNaN(raw) || raw < 1 || raw > 999) {
+        input.focus();
+        return;
+      }
+      throttle('selectCard', 400, () => {
+        myVote = String(raw);
+        participantRef.update({ vote: myVote });
+        input.blur();
       });
     }
 
