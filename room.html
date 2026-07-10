@@ -875,7 +875,10 @@
 
         // Sync myVote from Firebase (handles remote reset)
         const myData = participants[userId];
-        if (myData && !myData.vote && myVote) myVote = null;
+        if (myData && !myData.vote && myVote) {
+          myVote = null;
+          document.getElementById('ptInput').value = '';
+        }
 
         // Track post-reveal vote changes
         if (isRevealed) {
