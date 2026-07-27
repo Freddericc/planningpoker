@@ -137,12 +137,6 @@
     }
     .observer-notice.visible { display: flex; }
 
-    /* ── Bottom 50/50 grid (Reaktionen + Letzte Schätzungen) ── */
-    .bottom-grid {
-      display: flex; gap: 32px; align-items: flex-start; margin-bottom: 32px;
-    }
-    .bottom-grid > * { flex: 1; min-width: 0; }
-    @media (max-width: 600px) { .bottom-grid { flex-direction: column; gap: 24px; } }
 
     /* ── Results ── */
     .results-box {
@@ -294,19 +288,6 @@
     .elmo-display img { width: 100%; height: auto; display: block; border-radius: 16px; }
     .elmo-display .elmo-fallback { font-size: 12rem; text-align: center; line-height: 1; }
 
-    /* ── Reactions ── */
-    .reactions-section { margin-bottom: 0; }
-    .reaction-btns { display: flex; flex-wrap: wrap; gap: 8px; }
-    .reaction-btn {
-      padding: 8px 14px; border: 1.5px solid #e2e8f0;
-      border-radius: 20px; background: #fff; color: #475569;
-      font-size: 0.85rem; cursor: pointer; transition: all 0.15s;
-      white-space: nowrap; box-shadow: 0 1px 2px rgba(0,0,0,0.04);
-    }
-    .reaction-btn:hover { border-color: #e94560; color: #e94560; background: #fff5f7; }
-    .reaction-btn:active { transform: scale(0.95); }
-    .reaction-muted { border-color: #f59e0b; color: #d97706; background: #fffbeb; }
-    .reaction-muted:hover { border-color: #d97706; background: #fef3c7; color: #b45309; }
 
     /* ── Speech bubble ── */
     @keyframes bubbleLife {
@@ -510,9 +491,6 @@
     html.dark .btn-toot:hover { border-color: #f59e0b; background: #2d2206; }
     html.dark .btn-elmo   { background: #1e293b; border-color: #334155; }
     html.dark .btn-elmo:hover { border-color: #e94560; }
-    html.dark .reaction-btn { background: #1e293b; border-color: #334155; color: #94a3b8; box-shadow: none; }
-    html.dark .reaction-btn:hover { border-color: #e94560; color: #e94560; background: #2d1219; }
-    html.dark .reaction-muted { background: #2d2206; border-color: #d97706; color: #d97706; }
     html.dark .speech-bubble { background: #1e293b; border-color: #334155; }
     html.dark .speech-bubble::before { border-top-color: #1e293b; }
     html.dark .speech-bubble::after  { border-top-color: #334155; }
@@ -642,24 +620,17 @@
       </button>
     </div>
 
-    <!-- Reaktionen (links) + Letzte Schätzungen (rechts) — 50/50 -->
-    <div class="bottom-grid">
-      <div class="reactions-section">
-        <div class="section-label">Reaktionen</div>
-        <div class="reaction-btns" id="reactionBtns"></div>
-      </div>
-      <div class="history-section" id="historySection" style="display:none">
-        <div class="section-label" style="margin-bottom:14px">Letzte Schätzungen</div>
-        <table class="history-table">
-          <thead>
-            <tr>
-              <th>Story / Aufgabe</th>
-              <th style="padding-left:20px">Durchschnitt</th>
-            </tr>
-          </thead>
-          <tbody id="historyBody"></tbody>
-        </table>
-      </div>
+    <div class="history-section" id="historySection" style="display:none">
+      <div class="section-label" style="margin-bottom:14px">Letzte Schätzungen</div>
+      <table class="history-table">
+        <thead>
+          <tr>
+            <th>Story / Aufgabe</th>
+            <th style="padding-left:20px">Durchschnitt</th>
+          </tr>
+        </thead>
+        <tbody id="historyBody"></tbody>
+      </table>
     </div>
 
   </main>
@@ -673,16 +644,6 @@
   <script>
     const CARDS = ['1', '2', '3', '5', '8', '13', '?'];
 
-    const REACTIONS = [
-      { text: 'puhhh… schwieeerig 😓' },
-      { text: 'Ich brauche mehr Infos 🧐' },
-      { text: 'Das ist riesig! 😱' },
-      { text: 'Einfach, kein Aufwand 😎' },
-      { text: 'Können wir splitten? ✂️' },
-      { text: 'Kaffeepause bitte ☕' },
-      { text: 'Bin ich der Einzige? 🫠' },
-    ];
-    const REACTION_MUTED = { text: 'Ups, ich war gemutet 🔇', muted: true };
 
     const AVATARS = [
       '😎','🤓','🧐','🤔','🤯','🤠','🥷','🦸',
@@ -961,7 +922,6 @@
       renderParticipants(cachedParticipants);
       updateCardState();
       updateRevealBtn(voters);
-      renderReactions(voterEntries);
 
       if (!isRevealed) {
         const allVoted = voters.length >= 1 && voters.every(p => p.vote);
@@ -1198,30 +1158,6 @@
     }
 
     // ── Reactions ─────────────────────────────────────────
-    function renderReactions(voterEntries) {
-      const container = document.getElementById('reactionBtns');
-      container.innerHTML = '';
-      const nonVoters = voterEntries.filter(([,p]) => !p.vote);
-      const showMuted = !isRevealed && myRole !== 'observer'
-                     && nonVoters.length === 1 && nonVoters[0][0] === userId;
-      REACTIONS.forEach(r => container.appendChild(makeReactionBtn(r.text, false)));
-      if (showMuted) container.appendChild(makeReactionBtn(REACTION_MUTED.text, true));
-    }
-
-    function makeReactionBtn(text, muted) {
-      const btn = document.createElement('button');
-      btn.className = 'reaction-btn' + (muted ? ' reaction-muted' : '');
-      btn.textContent = text;
-      btn.onclick = () => sendReaction(text);
-      return btn;
-    }
-
-    function sendReaction(text) {
-      throttle('reaction', 1500, () => {
-        roomRef.child('bubble').set({ text, author: myName, ts: Date.now() });
-      });
-    }
-
     // ── Speech bubble ─────────────────────────────────────
     function showBubble(bubble) {
       document.querySelectorAll('.speech-bubble').forEach(b => b.remove());
