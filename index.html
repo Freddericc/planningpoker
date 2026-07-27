@@ -213,6 +213,40 @@
     html.dark .dark-toggle  { border-color: #334155; color: #94a3b8; }
     html.dark .dark-toggle:hover { background: #334155; }
 
+    /* ── Camera modal ── */
+    .cam-overlay {
+      position: fixed; inset: 0; background: rgba(15,23,42,0.75);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 600; backdrop-filter: blur(6px);
+    }
+    .cam-dialog {
+      background: #fff; border-radius: 20px; padding: 28px 24px;
+      width: 100%; max-width: 300px; text-align: center;
+      box-shadow: 0 24px 64px rgba(0,0,0,0.28);
+      animation: fadeIn 0.18s ease;
+    }
+    .cam-title { font-size: 1rem; font-weight: 700; color: #0f172a; margin-bottom: 18px; }
+    .cam-circle {
+      width: 190px; height: 190px; border-radius: 50%; object-fit: cover;
+      background: #1e293b; display: block; margin: 0 auto 16px;
+      border: 3px solid #e94560;
+    }
+    .cam-canvas { display: none; }
+    .cam-actions { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-top: 6px; }
+    .cam-btn {
+      padding: 9px 16px; border-radius: 8px; font-size: 0.85rem;
+      font-weight: 600; cursor: pointer; font-family: inherit; transition: all 0.15s;
+    }
+    .cam-btn-primary { background: #e94560; color: #fff; border: none; }
+    .cam-btn-primary:hover { background: #c73652; }
+    .cam-btn-secondary { background: #f1f5f9; color: #0f172a; border: 1.5px solid #e2e8f0; }
+    .cam-btn-secondary:hover { background: #e2e8f0; }
+    .cam-error { font-size: 0.75rem; color: #e94560; margin-top: 8px; min-height: 1em; }
+    html.dark .cam-dialog { background: #1e293b; }
+    html.dark .cam-title  { color: #f1f5f9; }
+    html.dark .cam-btn-secondary { background: #0f172a; border-color: #334155; color: #f1f5f9; }
+    html.dark .cam-btn-secondary:hover { background: #334155; }
+
     /* ── Delete button ── */
     .delete-all-btn {
       margin-top: 18px;
@@ -358,6 +392,24 @@
   <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+  <!-- Camera modal -->
+  <div class="cam-overlay" id="cameraModal" style="display:none"
+       onclick="if(event.target===this)closeCameraModal()">
+    <div class="cam-dialog">
+      <div class="cam-title">📷 Selfie als Avatar</div>
+      <video id="camVideo" class="cam-circle" autoplay playsinline muted></video>
+      <img   id="camPreview" class="cam-circle" style="display:none" alt="">
+      <canvas id="camCanvas" class="cam-canvas"></canvas>
+      <div class="cam-error" id="camError"></div>
+      <div class="cam-actions">
+        <button class="cam-btn cam-btn-primary"   id="camCaptureBtn" onclick="camCapture()">Aufnehmen</button>
+        <button class="cam-btn cam-btn-secondary" id="camRetakeBtn"  onclick="camRetake()" style="display:none">Nochmal</button>
+        <button class="cam-btn cam-btn-primary"   id="camUseBtn"     onclick="camUse()"    style="display:none">Verwenden ✓</button>
+        <button class="cam-btn cam-btn-secondary" onclick="closeCameraModal()">Abbrechen</button>
+      </div>
+    </div>
+  </div>
+
   <script src="firebase-config.js"></script>
   <script src="logger.js"></script>
 
@@ -365,11 +417,12 @@
     const AVATARS = [
       '😎','🤓','🧐','🤔','🤯','🤠','🥷','🦸',
       '🧙','😈','👾','🤖','🦊','🦄','🐱','🚀',
-      '📈','🔍','🕵️','🤫','🏛️','⚡',
+      '📈','🔍','🕵️','🤫','🏛️',
     ];
 
     let selectedAvatar = AVATARS[0];
     let selectedMode = 'fibonacci';
+    let selfieBase64 = localStorage.getItem('pp_selfie') || null;
 
     function selectMode(mode) {
       selectedMode = mode;
@@ -381,16 +434,48 @@
     AVATARS.forEach(emoji => {
       const btn = document.createElement('button');
       btn.className = 'avatar-btn' + (emoji === selectedAvatar ? ' selected' : '');
+      btn.dataset.val = emoji;
       btn.textContent = emoji;
       btn.type = 'button';
       btn.onclick = () => selectAvatar(emoji);
       grid.appendChild(btn);
     });
 
-    function selectAvatar(emoji) {
-      selectedAvatar = emoji;
+    // Camera button — last item in grid
+    const camBtn = document.createElement('button');
+    camBtn.className = 'avatar-btn';
+    camBtn.dataset.val = '__selfie__';
+    camBtn.type = 'button';
+    camBtn.id = 'avatarCameraBtn';
+    camBtn.title = 'Selfie aufnehmen';
+    camBtn.onclick = () => openCameraModal(dataUrl => {
+      selfieBase64 = dataUrl;
+      selectAvatar('__selfie__');
+    });
+    if (selfieBase64) {
+      const img = document.createElement('img');
+      img.src = selfieBase64;
+      img.style.cssText = 'width:100%;height:100%;border-radius:6px;object-fit:cover;';
+      camBtn.appendChild(img);
+    } else {
+      camBtn.textContent = '📷';
+    }
+    grid.appendChild(camBtn);
+
+    function selectAvatar(val) {
+      selectedAvatar = val;
       document.querySelectorAll('.avatar-btn').forEach(b =>
-        b.classList.toggle('selected', b.textContent === emoji));
+        b.classList.toggle('selected', b.dataset.val === val));
+      if (val === '__selfie__' && selfieBase64) {
+        const btn = document.getElementById('avatarCameraBtn');
+        if (btn && !btn.querySelector('img')) {
+          btn.textContent = '';
+          const img = document.createElement('img');
+          img.src = selfieBase64;
+          img.style.cssText = 'width:100%;height:100%;border-radius:6px;object-fit:cover;';
+          btn.appendChild(img);
+        }
+      }
     }
 
     function enterAs(role) {
@@ -400,11 +485,12 @@
       if (!name) { err.style.display = 'block'; return; }
       err.style.display = 'none';
       const roomId = code || Math.random().toString(36).substring(2, 8);
+      const avatarParam = selectedAvatar === '__selfie__' ? '__selfie__' : selectedAvatar;
       location.href =
         `room.html?room=${encodeURIComponent(roomId)}` +
         `&name=${encodeURIComponent(name)}` +
         `&role=${role}` +
-        `&avatar=${encodeURIComponent(selectedAvatar)}` +
+        `&avatar=${encodeURIComponent(avatarParam)}` +
         `&mode=${selectedMode}`;
     }
 
@@ -446,22 +532,94 @@
 
       // Pre-fill name + avatar
       document.getElementById('name').value = latest.name;
-      if (latest.avatar) selectAvatar(latest.avatar);
+      if (latest.avatar) {
+        if (latest.avatar.startsWith('data:image')) {
+          selfieBase64 = latest.avatar;
+          localStorage.setItem('pp_selfie', latest.avatar);
+          selectAvatar('__selfie__');
+        } else {
+          selectAvatar(latest.avatar);
+        }
+      }
 
       // Show rejoin card
       const roleLabel = latest.role === 'observer' ? '🔭 Beobachten' : '🃏 Teilnehmen';
+      const avatarDisplay = latest.avatar && latest.avatar.startsWith('data:image') ? '📷' : (latest.avatar || '');
       document.getElementById('lastRoomName').textContent = `Raum: ${latest.roomId}`;
       document.getElementById('lastRoomMeta').textContent =
-        `${latest.avatar || ''} ${latest.name} · ${roleLabel}`;
+        `${avatarDisplay} ${latest.name} · ${roleLabel}`;
       document.getElementById('lastRoomBtn').onclick = () => {
+        const avatarParam = latest.avatar && latest.avatar.startsWith('data:image')
+          ? '__selfie__' : (latest.avatar || '😎');
         location.href =
           `room.html?room=${encodeURIComponent(latest.roomId)}` +
           `&name=${encodeURIComponent(latest.name)}` +
           `&role=${latest.role}` +
-          `&avatar=${encodeURIComponent(latest.avatar || '😎')}`;
+          `&avatar=${encodeURIComponent(avatarParam)}`;
       };
       document.getElementById('lastRoomCard').style.display = 'flex';
     })();
+
+    // ── Camera modal ─────────────────────────────────────
+    let _camStream = null;
+    let _camCallback = null;
+
+    async function openCameraModal(onUse) {
+      _camCallback = onUse;
+      const video = document.getElementById('camVideo');
+      const preview = document.getElementById('camPreview');
+      document.getElementById('cameraModal').style.display = 'flex';
+      video.style.display = '';
+      preview.style.display = 'none';
+      document.getElementById('camCaptureBtn').style.display = '';
+      document.getElementById('camRetakeBtn').style.display = 'none';
+      document.getElementById('camUseBtn').style.display = 'none';
+      document.getElementById('camError').textContent = '';
+      try {
+        _camStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: false });
+        video.srcObject = _camStream;
+      } catch(e) {
+        document.getElementById('camError').textContent = 'Kamera nicht verfügbar: ' + (e.message || e);
+      }
+    }
+
+    function camCapture() {
+      const video = document.getElementById('camVideo');
+      const canvas = document.getElementById('camCanvas');
+      const preview = document.getElementById('camPreview');
+      const size = 120;
+      canvas.width = size; canvas.height = size;
+      const ctx = canvas.getContext('2d');
+      const vw = video.videoWidth, vh = video.videoHeight;
+      const side = Math.min(vw, vh);
+      ctx.drawImage(video, (vw - side) / 2, (vh - side) / 2, side, side, 0, 0, size, size);
+      preview.src = canvas.toDataURL('image/jpeg', 0.45);
+      video.style.display = 'none';
+      preview.style.display = '';
+      document.getElementById('camCaptureBtn').style.display = 'none';
+      document.getElementById('camRetakeBtn').style.display = '';
+      document.getElementById('camUseBtn').style.display = '';
+    }
+
+    function camRetake() {
+      document.getElementById('camPreview').style.display = 'none';
+      document.getElementById('camVideo').style.display = '';
+      document.getElementById('camCaptureBtn').style.display = '';
+      document.getElementById('camRetakeBtn').style.display = 'none';
+      document.getElementById('camUseBtn').style.display = 'none';
+    }
+
+    function camUse() {
+      const dataUrl = document.getElementById('camPreview').src;
+      localStorage.setItem('pp_selfie', dataUrl);
+      if (_camCallback) _camCallback(dataUrl);
+      closeCameraModal();
+    }
+
+    function closeCameraModal() {
+      document.getElementById('cameraModal').style.display = 'none';
+      if (_camStream) { _camStream.getTracks().forEach(t => t.stop()); _camStream = null; }
+    }
 
     // ── Dark mode ─────────────────────────────────────────
     function toggleDark() {
@@ -498,6 +656,10 @@
         Object.keys(localStorage)
           .filter(k => k.startsWith('pp_') && k !== 'pp_dark')
           .forEach(k => localStorage.removeItem(k));
+        selfieBase64 = null;
+        // Reset camera button to plain icon
+        const cb = document.getElementById('avatarCameraBtn');
+        if (cb) { cb.innerHTML = ''; cb.textContent = '📷'; }
         document.getElementById('lastRoomCard').style.display = 'none';
         closeDeleteModal();
       } catch(e) {

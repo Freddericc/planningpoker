@@ -204,6 +204,7 @@
     }
     .vote-card.changed  { border-color: #f59e0b; background: #f59e0b; color: #fff; animation: votePulse 1s ease-in-out 5; }
     .p-avatar { font-size: 1.8rem; margin-bottom: 4px; line-height: 1; }
+    .p-avatar-img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; margin-bottom: 4px; display: block; }
 
     /* ── Observers strip ── */
     .observers-section { margin-bottom: 28px; }
@@ -506,6 +507,39 @@
     html.dark .role-btn.active { background: #2d1219; }
     html.dark .ov-avatar-btn { background: #0f172a; border-color: #334155; }
     html.dark .ov-avatar-btn.selected { background: #2d1219; border-color: #e94560; }
+    /* ── Camera modal ── */
+    .cam-overlay {
+      position: fixed; inset: 0; background: rgba(15,23,42,0.75);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 600; backdrop-filter: blur(6px);
+    }
+    .cam-dialog {
+      background: #fff; border-radius: 20px; padding: 28px 24px;
+      width: 100%; max-width: 300px; text-align: center;
+      box-shadow: 0 24px 64px rgba(0,0,0,0.28);
+      animation: fadeIn 0.18s ease;
+    }
+    .cam-title { font-size: 1rem; font-weight: 700; color: #0f172a; margin-bottom: 18px; }
+    .cam-circle {
+      width: 190px; height: 190px; border-radius: 50%; object-fit: cover;
+      background: #1e293b; display: block; margin: 0 auto 16px;
+      border: 3px solid #e94560;
+    }
+    .cam-canvas { display: none; }
+    .cam-actions { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-top: 6px; }
+    .cam-btn {
+      padding: 9px 16px; border-radius: 8px; font-size: 0.85rem;
+      font-weight: 600; cursor: pointer; font-family: inherit; transition: all 0.15s;
+    }
+    .cam-btn-primary { background: #e94560; color: #fff; border: none; }
+    .cam-btn-primary:hover { background: #c73652; }
+    .cam-btn-secondary { background: #f1f5f9; color: #0f172a; border: 1.5px solid #e2e8f0; }
+    .cam-btn-secondary:hover { background: #e2e8f0; }
+    .cam-error { font-size: 0.75rem; color: #e94560; margin-top: 8px; min-height: 1em; }
+    html.dark .cam-dialog { background: #1e293b; }
+    html.dark .cam-title  { color: #f1f5f9; }
+    html.dark .cam-btn-secondary { background: #0f172a; border-color: #334155; color: #f1f5f9; }
+    html.dark .cam-btn-secondary:hover { background: #334155; }
     html.dark .waiting     { color: #475569; }
     html.dark .history-table { background: #1e293b; border-color: #334155; }
     html.dark .history-table th { background: #0f172a; color: #64748b; border-color: #334155; }
@@ -535,6 +569,24 @@
         </button>
       </div>
       <button class="join-btn" onclick="joinWithName()">Beitreten</button>
+    </div>
+  </div>
+
+  <!-- Camera modal -->
+  <div class="cam-overlay" id="cameraModal" style="display:none"
+       onclick="if(event.target===this)closeCameraModal()">
+    <div class="cam-dialog">
+      <div class="cam-title">📷 Selfie als Avatar</div>
+      <video id="camVideo" class="cam-circle" autoplay playsinline muted></video>
+      <img   id="camPreview" class="cam-circle" style="display:none" alt="">
+      <canvas id="camCanvas" class="cam-canvas"></canvas>
+      <div class="cam-error" id="camError"></div>
+      <div class="cam-actions">
+        <button class="cam-btn cam-btn-primary"   id="camCaptureBtn" onclick="camCapture()">Aufnehmen</button>
+        <button class="cam-btn cam-btn-secondary" id="camRetakeBtn"  onclick="camRetake()" style="display:none">Nochmal</button>
+        <button class="cam-btn cam-btn-primary"   id="camUseBtn"     onclick="camUse()"    style="display:none">Verwenden ✓</button>
+        <button class="cam-btn cam-btn-secondary" onclick="closeCameraModal()">Abbrechen</button>
+      </div>
     </div>
   </div>
 
@@ -648,8 +700,10 @@
     const AVATARS = [
       '😎','🤓','🧐','🤔','🤯','🤠','🥷','🦸',
       '🧙','😈','👾','🤖','🦊','🦄','🐱','🚀',
-      '📈','🔍','🕵️','🤫','🏛️','⚡',
+      '📈','🔍','🕵️','🤫','🏛️',
     ];
+
+    let selfieBase64 = localStorage.getItem('pp_selfie') || null;
 
     // ── URL params ────────────────────────────────────────
     const params    = new URLSearchParams(location.search);
@@ -733,11 +787,13 @@
 
     // ── Enter room or show overlay ────────────────────────
     if (urlName && urlRole) {
-      myName = urlName; myRole = urlRole; myAvatar = urlAvatar || '😎';
+      myName = urlName; myRole = urlRole;
+      myAvatar = urlAvatar === '__selfie__' ? (selfieBase64 || '📷') : (urlAvatar || '😎');
       hide('nameOverlay');
       enterRoom();
     } else if (stored?.name) {
-      myName = stored.name; myRole = stored.role || 'voter'; myAvatar = stored.avatar || '😎';
+      myName = stored.name; myRole = stored.role || 'voter';
+      myAvatar = stored.avatar || '😎';
       hide('nameOverlay');
       enterRoom();
     } else {
@@ -756,27 +812,123 @@
       document.getElementById('overlay-observer').classList.toggle('active', role === 'observer');
     }
 
+    // ── Camera modal ──────────────────────────────────────
+    let _camStream = null;
+    let _camCallback = null;
+
+    async function openCameraModal(onUse) {
+      _camCallback = onUse;
+      const video = document.getElementById('camVideo');
+      const preview = document.getElementById('camPreview');
+      document.getElementById('cameraModal').style.display = 'flex';
+      video.style.display = '';
+      preview.style.display = 'none';
+      document.getElementById('camCaptureBtn').style.display = '';
+      document.getElementById('camRetakeBtn').style.display = 'none';
+      document.getElementById('camUseBtn').style.display = 'none';
+      document.getElementById('camError').textContent = '';
+      try {
+        _camStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: false });
+        video.srcObject = _camStream;
+      } catch(e) {
+        document.getElementById('camError').textContent = 'Kamera nicht verfügbar: ' + (e.message || e);
+      }
+    }
+
+    function camCapture() {
+      const video = document.getElementById('camVideo');
+      const canvas = document.getElementById('camCanvas');
+      const preview = document.getElementById('camPreview');
+      const size = 120;
+      canvas.width = size; canvas.height = size;
+      const ctx = canvas.getContext('2d');
+      const vw = video.videoWidth, vh = video.videoHeight;
+      const side = Math.min(vw, vh);
+      ctx.drawImage(video, (vw - side) / 2, (vh - side) / 2, side, side, 0, 0, size, size);
+      preview.src = canvas.toDataURL('image/jpeg', 0.45);
+      video.style.display = 'none';
+      preview.style.display = '';
+      document.getElementById('camCaptureBtn').style.display = 'none';
+      document.getElementById('camRetakeBtn').style.display = '';
+      document.getElementById('camUseBtn').style.display = '';
+    }
+
+    function camRetake() {
+      document.getElementById('camPreview').style.display = 'none';
+      document.getElementById('camVideo').style.display = '';
+      document.getElementById('camCaptureBtn').style.display = '';
+      document.getElementById('camRetakeBtn').style.display = 'none';
+      document.getElementById('camUseBtn').style.display = 'none';
+    }
+
+    function camUse() {
+      const dataUrl = document.getElementById('camPreview').src;
+      localStorage.setItem('pp_selfie', dataUrl);
+      if (_camCallback) _camCallback(dataUrl);
+      closeCameraModal();
+    }
+
+    function closeCameraModal() {
+      document.getElementById('cameraModal').style.display = 'none';
+      if (_camStream) { _camStream.getTracks().forEach(t => t.stop()); _camStream = null; }
+    }
+
+    function selectOverlayAvatar(val) {
+      overlayAvatar = val;
+      document.querySelectorAll('.ov-avatar-btn').forEach(b =>
+        b.classList.toggle('selected', b.dataset.val === val));
+      if (val === '__selfie__' && selfieBase64) {
+        const cb = document.getElementById('overlayCameraBtn');
+        if (cb && !cb.querySelector('img')) {
+          cb.textContent = '';
+          const img = document.createElement('img');
+          img.src = selfieBase64;
+          img.style.cssText = 'width:100%;height:100%;border-radius:5px;object-fit:cover;';
+          cb.appendChild(img);
+        }
+      }
+    }
+
     function buildOverlayAvatarGrid() {
       const container = document.getElementById('overlayAvatarGrid');
       container.innerHTML = '';
       AVATARS.forEach(emoji => {
         const btn = document.createElement('button');
         btn.className = 'ov-avatar-btn' + (emoji === overlayAvatar ? ' selected' : '');
+        btn.dataset.val = emoji;
         btn.textContent = emoji;
         btn.type = 'button';
-        btn.onclick = () => {
-          overlayAvatar = emoji;
-          container.querySelectorAll('.ov-avatar-btn').forEach(b =>
-            b.classList.toggle('selected', b.textContent === emoji));
-        };
+        btn.onclick = () => selectOverlayAvatar(emoji);
         container.appendChild(btn);
       });
+
+      // Camera button — last in overlay grid
+      const camBtn = document.createElement('button');
+      camBtn.className = 'ov-avatar-btn';
+      camBtn.dataset.val = '__selfie__';
+      camBtn.type = 'button';
+      camBtn.id = 'overlayCameraBtn';
+      camBtn.title = 'Selfie aufnehmen';
+      camBtn.onclick = () => openCameraModal(dataUrl => {
+        selfieBase64 = dataUrl;
+        selectOverlayAvatar('__selfie__');
+      });
+      if (selfieBase64) {
+        const img = document.createElement('img');
+        img.src = selfieBase64;
+        img.style.cssText = 'width:100%;height:100%;border-radius:5px;object-fit:cover;';
+        camBtn.appendChild(img);
+      } else {
+        camBtn.textContent = '📷';
+      }
+      container.appendChild(camBtn);
     }
 
     function joinWithName() {
       const val = document.getElementById('nameInput').value.trim();
       if (!val) return;
-      myName = val; myRole = overlayRole; myAvatar = overlayAvatar;
+      myName = val; myRole = overlayRole;
+      myAvatar = overlayAvatar === '__selfie__' ? (selfieBase64 || '📷') : overlayAvatar;
       hide('nameOverlay');
       enterRoom();
     }
@@ -998,9 +1150,16 @@
         chip.className = 'observer-chip';
         const isMe = uid === userId;
         if (p.avatar) {
-          const av = document.createElement('span');
-          av.textContent = p.avatar;
-          chip.appendChild(av);
+          if (p.avatar.startsWith('data:image')) {
+            const img = document.createElement('img');
+            img.src = p.avatar; img.alt = '';
+            img.style.cssText = 'width:20px;height:20px;border-radius:50%;object-fit:cover;vertical-align:middle;';
+            chip.appendChild(img);
+          } else {
+            const av = document.createElement('span');
+            av.textContent = p.avatar;
+            chip.appendChild(av);
+          }
         }
         const nameSpan = document.createElement('span');
         nameSpan.textContent = p.name || '?';
@@ -1027,10 +1186,18 @@
       wrap.className = 'participant' + (isRevealed ? ' revealed' : hasVote ? ' voted' : '');
 
       if (p.avatar) {
-        const av = document.createElement('div');
-        av.className = 'p-avatar';
-        av.textContent = p.avatar;
-        wrap.appendChild(av);
+        if (p.avatar.startsWith('data:image')) {
+          const img = document.createElement('img');
+          img.className = 'p-avatar-img';
+          img.src = p.avatar;
+          img.alt = '';
+          wrap.appendChild(img);
+        } else {
+          const av = document.createElement('div');
+          av.className = 'p-avatar';
+          av.textContent = p.avatar;
+          wrap.appendChild(av);
+        }
       }
 
       const nameEl = document.createElement('div');
