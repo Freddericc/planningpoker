@@ -105,6 +105,16 @@
     .pt-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
     .pt-input:focus { border-color: #e94560; }
     .pt-input::placeholder { color: #cbd5e0; font-weight: 400; font-size: 1rem; }
+    @keyframes ptShake {
+      0%, 100% { transform: translateX(0); }
+      20%       { transform: translateX(-6px); }
+      40%       { transform: translateX(6px); }
+      60%       { transform: translateX(-4px); }
+      80%       { transform: translateX(4px); }
+    }
+    .pt-input.error { border-color: #e94560; animation: ptShake 0.35s ease; }
+    .pt-error { font-size: 0.8rem; color: #e94560; margin-top: 6px; display: none; }
+    .pt-error.visible { display: block; }
     .pt-submit {
       padding: 14px 28px; background: #e94560; color: #fff;
       border: none; border-radius: 10px; font-size: 1rem;
@@ -580,8 +590,11 @@
       <div class="section-label">Deine Schätzung</div>
       <div class="cards-grid" id="cardsGrid"></div>
       <div class="pt-input-wrap" id="ptInputWrap" style="display:none">
-        <input type="number" id="ptInput" class="pt-input"
-               min="1" max="999" step="1" placeholder="1–999">
+        <div>
+          <input type="number" id="ptInput" class="pt-input"
+                 min="1" max="999" step="1" placeholder="1–999">
+          <div class="pt-error" id="ptError">Bitte eine ganze Zahl zwischen 1 und 999 eingeben.</div>
+        </div>
         <button class="pt-submit" onclick="submitPtVote()">Schätzen ✓</button>
       </div>
     </div>
@@ -688,13 +701,16 @@
     let db, roomRef, participantRef;
     let userId, myName = '', myRole = 'voter', myAvatar = '😎', myVote = null;
     let isRevealed = false, partyFired = false, overlayRole = 'voter', overlayAvatar = '😎';
-    let lastBubbleTs = 0, lastTootTs = 0, bubbleTimer = null, firstUpdate = true;
+    let lastBubbleTs = 0, lastTootTs = 0, bubbleTimer = null;
+    let cachedParticipants = {};
     let changedVoters = new Map(), prevVotes = {};
     let partyWraps = [], bannerTimer = null;
     let currentTitle = '', currentAvg = '—';
     let tootCooldown = false;
     let lastElmoTs = 0;
     let currentMode = 'fibonacci';
+    let lastStaleCheck = 0;
+    const participantNodeMap = new Map(); // uid → { wrap, voteEl }
 
     // ── Abuse / rate-limit guards ─────────────────────────
     // Shared AudioContext — reuse instead of creating one per toot click
@@ -811,15 +827,18 @@
       if (myRole === 'observer') {
         hide('voterSection');
         document.getElementById('observerNotice').classList.add('visible');
-        document.getElementById('observersSection').style.display = ''; // always show section for observers
+        show('observersSection'); // always show section for observers
       }
 
       participantRef = db.ref(`rooms/${roomId}/participants/${userId}`);
 
-      // Write estimation mode only if room has no mode yet (first joiner wins)
-      roomRef.child('mode').once('value', snap => {
-        if (!snap.exists()) roomRef.child('mode').set(urlMode);
-      });
+      // Write estimation mode only if room has no mode AND the URL explicitly carries one
+      // (prevents rejoin without mode= param from overwriting an existing room's mode)
+      if (params.has('mode')) {
+        roomRef.child('mode').once('value', snap => {
+          if (!snap.exists()) roomRef.child('mode').set(urlMode);
+        });
+      }
 
       // On every (re-)connect: mark online, register offline-flag on disconnect.
       // Never remove on disconnect — keeps votes intact during brief outages.
@@ -835,9 +854,12 @@
         }).catch(e => logError('Presence write failed', { code: e.code }));
       });
 
-      // Personentage: submit on Enter
+      // Personentage: submit on Enter, clear error on input
       document.getElementById('ptInput').addEventListener('keydown', e => {
         if (e.key === 'Enter') submitPtVote();
+      });
+      document.getElementById('ptInput').addEventListener('input', () => {
+        document.getElementById('ptError').classList.remove('visible');
       });
 
       // Title input sync
@@ -850,93 +872,104 @@
         }, 400);
       });
 
-      roomRef.on('value', snap => {
-        const data = snap.val() || {};
-        isRevealed = data.revealed || false;
-        const mode = data.mode || 'fibonacci';
-        if (mode !== currentMode) applyMode(mode);
-        const participants = data.participants || {};
-
-        // Cleanup: remove participants offline for more than 10 minutes
-        const staleMs = 10 * 60 * 1000;
+      // ── Participants: re-render on every vote/join/leave ──
+      roomRef.child('participants').on('value', snap => {
+        cachedParticipants = snap.val() || {};
         const now = Date.now();
-        Object.entries(participants).forEach(([uid, p]) => {
-          if (p.online === false && p.lastSeen && (now - p.lastSeen) > staleMs) {
-            db.ref(`rooms/${roomId}/participants/${uid}`).remove();
-          }
-        });
-
-        // For voting logic, ignore offline participants
-        const activeParticipants = Object.fromEntries(
-          Object.entries(participants).filter(([, p]) => p.online !== false)
-        );
-        const voterEntries = Object.entries(activeParticipants).filter(([,p]) => p.role !== 'observer');
-        const voters = voterEntries.map(([,p]) => p);
-
-        // Sync myVote from Firebase (handles remote reset)
-        const myData = participants[userId];
-        if (myData && !myData.vote && myVote) {
-          myVote = null;
-          document.getElementById('ptInput').value = '';
-        }
-
-        // Track post-reveal vote changes
-        if (isRevealed) {
-          Object.entries(participants).forEach(([uid, p]) => {
-            if (p.role === 'observer') return;
-            if (uid in prevVotes && prevVotes[uid] !== p.vote) changedVoters.set(uid, Date.now());
+        if (now - lastStaleCheck > 5 * 60 * 1000) {
+          lastStaleCheck = now;
+          Object.entries(cachedParticipants).forEach(([uid, p]) => {
+            if (p.online === false && p.lastSeen && (now - p.lastSeen) > 10 * 60 * 1000)
+              db.ref(`rooms/${roomId}/participants/${uid}`).remove();
           });
-        } else {
-          changedVoters.clear();
         }
-        Object.entries(participants).forEach(([uid, p]) => { prevVotes[uid] = p.vote; });
+        renderAll();
+      });
 
-        // Sync title
-        const newTitle = data.title || '';
+      // ── Revealed: triggers full re-render with updated state ──
+      roomRef.child('revealed').on('value', snap => {
+        isRevealed = snap.val() || false;
+        renderAll();
+      });
+
+      // ── Title: only syncs the input — no participant re-render ──
+      roomRef.child('title').on('value', snap => {
+        const newTitle = snap.val() || '';
         currentTitle = newTitle;
         if (titleInputEl !== document.activeElement) titleInputEl.value = newTitle;
-
-        renderParticipants(participants);   // all — incl. offline (shown dimmed)
-        updateCardState();
-        updateRevealBtn(voters);            // only active voters
-        renderReactions(voterEntries);      // only active voters
-
-        // Auto-reveal when all voters voted
-        if (!isRevealed) {
-          const allVoted = voters.length >= 1 && voters.every(p => p.vote);
-          if (allVoted) revealVotes();
-        }
-
-        if (isRevealed) showResults(voters);
-        else            document.getElementById('resultsBox').classList.remove('visible');
-
-        // History
-        renderHistory(data.history || []);
-
-        // Speech bubbles & toot (skip stale on rejoin)
-        const bubble = data.bubble;
-        const toot   = data.toot;
-        const elmo = data.elmo;
-        if (firstUpdate) {
-          lastBubbleTs = bubble?.ts || 0;
-          lastTootTs   = toot?.ts   || 0;
-          lastElmoTs   = elmo?.ts   || 0;
-          firstUpdate  = false;
-        } else {
-          if (bubble && bubble.ts > lastBubbleTs) {
-            lastBubbleTs = bubble.ts;
-            showBubble(bubble);
-          }
-          if (toot && toot.ts > lastTootTs) {
-            lastTootTs = toot.ts;
-            triggerToot(toot.author);
-          }
-          if (elmo && elmo.ts > lastElmoTs) {
-            lastElmoTs = elmo.ts;
-            triggerElmo();
-          }
-        }
       });
+
+      // ── Mode: apply estimation mode ──
+      roomRef.child('mode').on('value', snap => {
+        const mode = snap.val() || 'fibonacci';
+        if (mode !== currentMode) applyMode(mode);
+      });
+
+      // ── History: update history table ──
+      roomRef.child('history').on('value', snap => {
+        renderHistory(snap.val() || []);
+      });
+
+      // ── Events: skip stale entries on initial load ──
+      let firstBubble = true, firstToot = true, firstElmo = true;
+
+      roomRef.child('bubble').on('value', snap => {
+        const bubble = snap.val();
+        if (firstBubble) { lastBubbleTs = bubble?.ts || 0; firstBubble = false; return; }
+        if (bubble && bubble.ts > lastBubbleTs) { lastBubbleTs = bubble.ts; showBubble(bubble); }
+      });
+
+      roomRef.child('toot').on('value', snap => {
+        const toot = snap.val();
+        if (firstToot) { lastTootTs = toot?.ts || 0; firstToot = false; return; }
+        if (toot && toot.ts > lastTootTs) { lastTootTs = toot.ts; triggerToot(toot.author); }
+      });
+
+      roomRef.child('elmo').on('value', snap => {
+        const elmo = snap.val();
+        if (firstElmo) { lastElmoTs = elmo?.ts || 0; firstElmo = false; return; }
+        if (elmo && elmo.ts > lastElmoTs) { lastElmoTs = elmo.ts; triggerElmo(); }
+      });
+    }
+
+    // ── Shared render (participants + revealed listeners both call this) ──
+    function renderAll() {
+      const activeParticipants = Object.fromEntries(
+        Object.entries(cachedParticipants).filter(([, p]) => p.online !== false)
+      );
+      const voterEntries = Object.entries(activeParticipants).filter(([, p]) => p.role !== 'observer');
+      const voters = voterEntries.map(([, p]) => p);
+
+      // Sync myVote from Firebase (handles remote reset)
+      const myData = cachedParticipants[userId];
+      if (myData && !myData.vote && myVote) {
+        myVote = null;
+        document.getElementById('ptInput').value = '';
+      }
+
+      // Track post-reveal vote changes
+      if (isRevealed) {
+        Object.entries(cachedParticipants).forEach(([uid, p]) => {
+          if (p.role === 'observer') return;
+          if (uid in prevVotes && prevVotes[uid] !== p.vote) changedVoters.set(uid, Date.now());
+        });
+      } else {
+        changedVoters.clear();
+      }
+      Object.entries(cachedParticipants).forEach(([uid, p]) => { prevVotes[uid] = p.vote; });
+
+      renderParticipants(cachedParticipants);
+      updateCardState();
+      updateRevealBtn(voters);
+      renderReactions(voterEntries);
+
+      if (!isRevealed) {
+        const allVoted = voters.length >= 1 && voters.every(p => p.vote);
+        if (allVoted) revealVotes();
+      }
+
+      if (isRevealed) showResults(voters);
+      else document.getElementById('resultsBox').classList.remove('visible');
     }
 
     // ── Card selection ────────────────────────────────────
@@ -962,29 +995,63 @@
       const pgrid    = document.getElementById('participantsGrid');
       const ogrid    = document.getElementById('observersGrid');
       const osection = document.getElementById('observersSection');
-      pgrid.innerHTML = '';
-      ogrid.innerHTML = '';
 
-      // Skip any corrupted/incomplete entries (no name = not fully joined yet)
       const valid           = Object.entries(participants).filter(([, p]) => p && p.name);
       const voterEntries    = valid.filter(([, p]) => p.role !== 'observer');
       const observerEntries = valid.filter(([, p]) => p.role === 'observer');
 
-      if (!voterEntries.length) {
-        pgrid.innerHTML = '<p class="waiting">Warte auf Teilnehmer…</p>';
-      } else {
-        voterEntries.forEach(([uid, p]) => pgrid.appendChild(buildVoterCard(uid, p)));
+      // ── Voter grid: DOM diffing — reuse existing nodes, only patch what changed ──
+      const newUidSet = new Set(voterEntries.map(([uid]) => uid));
+
+      for (const uid of [...participantNodeMap.keys()]) {
+        if (!newUidSet.has(uid)) {
+          participantNodeMap.get(uid).wrap.remove();
+          participantNodeMap.delete(uid);
+        }
       }
 
+      if (!voterEntries.length) {
+        if (!pgrid.querySelector('.waiting')) {
+          const w = document.createElement('p');
+          w.className = 'waiting';
+          w.textContent = 'Warte auf Teilnehmer…';
+          pgrid.appendChild(w);
+        }
+      } else {
+        pgrid.querySelector('.waiting')?.remove();
+        voterEntries.forEach(([uid, p]) => {
+          if (participantNodeMap.has(uid)) {
+            updateVoterCard(uid, p, participantNodeMap.get(uid));
+          } else {
+            const nodes = buildVoterCard(uid, p);
+            participantNodeMap.set(uid, nodes);
+            pgrid.appendChild(nodes.wrap);
+          }
+        });
+      }
+
+      // ── Observer grid: full rebuild (typically 0–3 entries, infrequent) ──
+      ogrid.innerHTML = '';
       osection.style.display = (observerEntries.length || myRole === 'observer') ? '' : 'none';
       observerEntries.forEach(([uid, p]) => {
         const chip = document.createElement('div');
         chip.className = 'observer-chip';
         const isMe = uid === userId;
-        const name = p.name || '?';
-        chip.innerHTML =
-          (p.avatar ? `<span>${p.avatar}</span>` : '') +
-          `<span>${name}${isMe ? ' <em style="color:#e94560;font-style:normal;font-size:0.75rem">(du)</em>' : ''}</span>`;
+        if (p.avatar) {
+          const av = document.createElement('span');
+          av.textContent = p.avatar;
+          chip.appendChild(av);
+        }
+        const nameSpan = document.createElement('span');
+        nameSpan.textContent = p.name || '?';
+        if (isMe) {
+          const em = document.createElement('em');
+          em.style.cssText = 'color:#e94560;font-style:normal;font-size:0.75rem';
+          em.textContent = '(du)';
+          nameSpan.appendChild(document.createTextNode(' '));
+          nameSpan.appendChild(em);
+        }
+        chip.appendChild(nameSpan);
         ogrid.appendChild(chip);
       });
     }
@@ -1008,7 +1075,13 @@
 
       const nameEl = document.createElement('div');
       nameEl.className = 'participant-name';
-      nameEl.innerHTML = (p.name || '?') + (isMe ? ' <em>(du)</em>' : '');
+      nameEl.textContent = p.name || '?';
+      if (isMe) {
+        const em = document.createElement('em');
+        em.textContent = '(du)';
+        nameEl.appendChild(document.createTextNode(' '));
+        nameEl.appendChild(em);
+      }
       wrap.appendChild(nameEl);
 
       const voteEl = document.createElement('div');
@@ -1017,7 +1090,20 @@
       voteEl.textContent = isRevealed ? (vote || '—') : hasVote ? '✓' : '…';
       wrap.appendChild(voteEl);
 
-      return wrap;
+      return { wrap, voteEl };
+    }
+
+    function updateVoterCard(uid, p, nodes) {
+      const { wrap, voteEl } = nodes;
+      const vote      = p.vote && p.vote !== 'undefined' ? p.vote : null;
+      const hasVote   = !!vote;
+      const changedAt = changedVoters.get(uid);
+      const isChanged = isRevealed && changedAt !== undefined && (Date.now() - changedAt < 5000);
+
+      wrap.className = 'participant' + (isRevealed ? ' revealed' : hasVote ? ' voted' : '');
+      voteEl.className = 'vote-card' +
+        (isChanged ? ' changed' : isRevealed ? ' revealed' : hasVote ? ' voted' : '');
+      voteEl.textContent = isRevealed ? (vote || '—') : hasVote ? '✓' : '…';
     }
 
     // ── Reveal button ─────────────────────────────────────
@@ -1142,9 +1228,14 @@
       if (bubbleTimer) clearTimeout(bubbleTimer);
       const el = document.createElement('div');
       el.className = 'speech-bubble';
-      el.innerHTML =
-        `<div class="bubble-author">${bubble.author} sagt:</div>` +
-        `<div class="bubble-text">${bubble.text}</div>`;
+      const authorEl = document.createElement('div');
+      authorEl.className = 'bubble-author';
+      authorEl.textContent = (bubble.author || '?') + ' sagt:';
+      const textEl = document.createElement('div');
+      textEl.className = 'bubble-text';
+      textEl.textContent = bubble.text || '';
+      el.appendChild(authorEl);
+      el.appendChild(textEl);
       document.body.appendChild(el);
       bubbleTimer = setTimeout(() => el.remove(), 5200);
     }
@@ -1289,8 +1380,16 @@
       document.querySelectorAll('.toot-display').forEach(e => e.remove());
       const el = document.createElement('div');
       el.className = 'toot-display';
-      el.innerHTML = '<span class="toot-emoji">📯</span>' +
-        (author ? `<span class="toot-name">${author}</span>` : '');
+      const emoji = document.createElement('span');
+      emoji.className = 'toot-emoji';
+      emoji.textContent = '📯';
+      el.appendChild(emoji);
+      if (author) {
+        const nameEl = document.createElement('span');
+        nameEl.className = 'toot-name';
+        nameEl.textContent = author;
+        el.appendChild(nameEl);
+      }
       document.body.appendChild(el);
       setTimeout(() => el.remove(), 2600);
     }
@@ -1455,8 +1554,8 @@
     function applyMode(mode) {
       currentMode = mode;
       const isPt = mode === 'personentage';
-      document.getElementById('cardsGrid').style.display    = isPt ? 'none' : '';
-      document.getElementById('ptInputWrap').style.display  = isPt ? ''     : 'none';
+      isPt ? hide('cardsGrid')   : show('cardsGrid');
+      isPt ? show('ptInputWrap') : hide('ptInputWrap');
       if (isPt && myVote) {
         // Keep current vote visible in input on mode change
         document.getElementById('ptInput').value = myVote;
@@ -1465,12 +1564,19 @@
 
     function submitPtVote() {
       if (myRole === 'observer') return;
-      const input = document.getElementById('ptInput');
-      const raw = parseInt(input.value, 10);
+      const input   = document.getElementById('ptInput');
+      const errorEl = document.getElementById('ptError');
+      const raw     = parseInt(input.value, 10);
       if (isNaN(raw) || raw < 1 || raw > 999) {
+        input.classList.remove('error');
+        void input.offsetWidth; // restart animation
+        input.classList.add('error');
+        errorEl.classList.add('visible');
         input.focus();
+        setTimeout(() => input.classList.remove('error'), 400);
         return;
       }
+      errorEl.classList.remove('visible');
       throttle('selectCard', 400, () => {
         myVote = String(raw);
         participantRef.update({ vote: myVote });
