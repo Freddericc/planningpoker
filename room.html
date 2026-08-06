@@ -1009,11 +1009,14 @@
       camBtn.dataset.val = '__selfie__';
       camBtn.type = 'button';
       camBtn.id = 'overlayCameraBtn';
-      camBtn.title = 'Selfie aufnehmen';
-      camBtn.onclick = () => openCameraModal(dataUrl => {
-        selfieBase64 = dataUrl;
-        selectOverlayAvatar('__selfie__');
-      });
+      camBtn.title = 'Klicken zum Auswählen · nochmal klicken zum Ändern';
+      camBtn.onclick = () => {
+        if (selfieBase64 && overlayAvatar !== '__selfie__') {
+          selectOverlayAvatar('__selfie__');
+        } else {
+          openCameraModal(dataUrl => { selfieBase64 = dataUrl; selectOverlayAvatar('__selfie__'); });
+        }
+      };
       if (selfieBase64) {
         const img = document.createElement('img');
         img.src = selfieBase64;
