@@ -24,17 +24,6 @@
     h1 { font-size: 2rem; color: #0f172a; margin-bottom: 6px; }
     .subtitle { color: #64748b; margin-bottom: 28px; font-size: 0.95rem; }
 
-    .hero-img {
-      width: 270px;
-      height: 270px;
-      object-fit: contain;
-      border-radius: 16px;
-      margin-bottom: 6px;
-      display: block;
-    }
-    .image-credit { font-size: 0.7rem; color: #cbd5e0; margin-bottom: 20px; }
-    .image-credit a { color: #cbd5e0; text-decoration: none; }
-    .image-credit a:hover { color: #94a3b8; }
 
     .panel {
       background: #fff;
@@ -194,8 +183,6 @@
     html.dark body          { background: #0f172a; color: #f1f5f9; }
     html.dark h1            { color: #f1f5f9; }
     html.dark .subtitle     { color: #94a3b8; }
-    html.dark .image-credit,
-    html.dark .image-credit a { color: #475569; }
     html.dark .panel        { background: #1e293b; border-color: #334155; box-shadow: none; }
     html.dark .field-label  { color: #94a3b8; }
     html.dark .optional-badge { background: #0f172a; color: #64748b; }
@@ -333,9 +320,7 @@
     <button class="last-room-btn" id="lastRoomBtn">Wieder beitreten →</button>
   </div>
 
-  <img id="heroImg" class="hero-img" src="" alt="Illustration by Twonks">
-  <div class="image-credit"><a href="https://www.twonks.co.uk" target="_blank">Illustration: twonks.co.uk</a></div>
-  <h1>Planning Poker</h1>
+<h1>Planning Poker</h1>
   <p class="subtitle">Schätzungen im Team – einfach &amp; live</p>
 
   <div class="panel">
@@ -521,24 +506,7 @@
         `&mode=${selectedMode}`;
     }
 
-    // ── Random Twonks image ───────────────────────────────
-    const TWONKS = [
-      'https://static.wixstatic.com/media/e6db62_2ada3b66cfb947ada9aaeec9214f3ab2~mv2.png',
-      'https://static.wixstatic.com/media/e6db62_29e0bafe7691433baa7b5779877d08a8~mv2.png',
-      'https://static.wixstatic.com/media/e6db62_0e89ee9bafbd4ee79fe672f09b096c68~mv2.png',
-      'https://static.wixstatic.com/media/e6db62_ed39c82369f240c4bb79bc0752121083~mv2.png',
-      'https://static.wixstatic.com/media/e6db62_e2bbc426473f41e1a4933289ff988d8e~mv2.png',
-      'https://static.wixstatic.com/media/e6db62_b7102758d8a74856a999c73c0c877ae2~mv2.png',
-      'https://static.wixstatic.com/media/e6db62_1252ae0d05424e33ac3c2227ff353e25~mv2.png',
-      'https://static.wixstatic.com/media/e6db62_2dc636e1d8e64358a4f8c93ddc24ce8b~mv2.png',
-      'https://static.wixstatic.com/media/e6db62_9bb10dbdc46e47dca019cd7f2db95095~mv2.png',
-      'https://static.wixstatic.com/media/e6db62_803663fa0e864a25a9d2e222694389c1~mv2.png',
-      'https://static.wixstatic.com/media/e6db62_9c348a9dc6394e48918da48630705807~mv2.png',
-      'https://static.wixstatic.com/media/e6db62_23f53fdc4aba49808910533953dccb9a~mv2.png',
-    ];
-    document.getElementById('heroImg').src = TWONKS[Math.floor(Math.random() * TWONKS.length)];
-
-    document.getElementById('name').addEventListener('keydown', e => {
+document.getElementById('name').addEventListener('keydown', e => {
       if (e.key === 'Enter') enterAs('voter');
     });
 
