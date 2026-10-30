@@ -561,6 +561,58 @@
     html.dark .history-table { background: #1e293b; border-color: #334155; }
     html.dark .history-table th { background: #0f172a; color: #64748b; border-color: #334155; }
     html.dark .history-table td { border-color: #334155; color: #f1f5f9; }
+
+    /* ── Mini-game ── */
+    .game-trigger {
+      display: none; margin-top: 14px; width: 100%;
+      background: #f8fafc; border: 1.5px dashed #94a3b8;
+      border-radius: 12px; padding: 10px 16px;
+      font-size: 0.85rem; color: #64748b; cursor: pointer;
+      text-align: center; transition: all 0.15s; font-family: inherit;
+    }
+    .game-trigger:hover { border-color: #e94560; color: #e94560; background: #fff5f7; }
+    .game-panel {
+      display: none; margin-top: 10px;
+      background: #fff; border: 1.5px solid #e2e8f0;
+      border-radius: 12px; padding: 14px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+    .game-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 10px; font-size: 0.82rem; font-weight: 600; color: #0f172a;
+    }
+    .game-close { background: none; border: none; cursor: pointer; font-size: 1rem; color: #94a3b8; line-height: 1; }
+    .game-close:hover { color: #0f172a; }
+    .game-canvas { display: block; border-radius: 8px; border: 1.5px solid #e2e8f0; margin: 0 auto; }
+    .game-score { margin-top: 8px; font-size: 0.8rem; color: #64748b; text-align: center; }
+    .game-win { display: none; margin-top: 8px; text-align: center; font-size: 1.2rem; font-weight: 700; color: #e94560; }
+    .game-keys { margin-top: 6px; font-size: 0.7rem; color: #94a3b8; text-align: center; }
+    .trophy-banner {
+      position: fixed; top: 72px; left: 50%; transform: translateX(-50%);
+      background: #fef3c7; border: 2px solid #f59e0b; border-radius: 16px;
+      padding: 12px 28px; font-size: 1rem; font-weight: 700; color: #92400e;
+      box-shadow: 0 4px 20px rgba(245,158,11,0.3);
+      z-index: 400; animation: fadeIn 0.3s ease; white-space: nowrap;
+    }
+    .trophy-section { margin-bottom: 28px; }
+    .trophy-row {
+      display: flex; align-items: center; gap: 10px;
+      padding: 8px 12px; border-radius: 8px;
+      background: #fef3c7; margin-bottom: 6px;
+      font-size: 0.88rem; font-weight: 600; color: #92400e;
+    }
+    .trophy-avatar { font-size: 1.1rem; line-height: 1; }
+    .trophy-name { flex: 1; }
+    .trophy-cups { color: #b45309; font-size: 0.82rem; }
+    html.dark .game-trigger { background: #1e293b; border-color: #334155; color: #64748b; }
+    html.dark .game-trigger:hover { border-color: #e94560; color: #e94560; background: #2d1219; }
+    html.dark .game-panel { background: #1e293b; border-color: #334155; }
+    html.dark .game-header { color: #f1f5f9; }
+    html.dark .game-canvas { border-color: #334155; }
+    html.dark .game-score, html.dark .game-keys { color: #475569; }
+    html.dark .trophy-banner { background: #1c1500; border-color: #b45309; color: #fcd34d; }
+    html.dark .trophy-row { background: #1c1500; color: #fcd34d; }
+    html.dark .trophy-cups { color: #d97706; }
   </style>
 </head>
 <body>
@@ -658,6 +710,19 @@
       </div>
     </div>
 
+    <!-- Mini-game (visible after voting, before reveal) -->
+    <button class="game-trigger" id="gameBtn" onclick="openGame()">🎮 Schon fertig? Mini-Game spielen</button>
+    <div class="game-panel" id="gamePanel">
+      <div class="game-header">
+        <span>🐍 Snake — 5 Punkte zum Gewinnen</span>
+        <button class="game-close" onclick="closeGame()">✕</button>
+      </div>
+      <canvas id="gameCanvas" class="game-canvas" width="200" height="200"></canvas>
+      <div class="game-score" id="gameScore">0 / 5 Punkte</div>
+      <div class="game-win" id="gameWin">🏆 Gewonnen!</div>
+      <div class="game-keys">← → ↑ ↓ Pfeiltasten steuern</div>
+    </div>
+
     <!-- Results -->
     <div class="results-box" id="resultsBox">
       <div class="section-label" style="margin-bottom:10px">Ergebnis</div>
@@ -699,6 +764,12 @@
       <button class="btn-elmo" id="elmoBtn" onclick="sendElmo()" title="ENOUGH, LET'S MOVE ON!">
         <img src="elmo-peek.png" alt="Elmo" onerror="this.replaceWith(document.createTextNode('🤪'))">
       </button>
+    </div>
+
+    <!-- Trophy ranking -->
+    <div class="trophy-section" id="trophySection" style="display:none">
+      <div class="section-label" style="margin-bottom:10px">🏆 Rangliste</div>
+      <div id="trophyList"></div>
     </div>
 
     <div class="history-section" id="historySection" style="display:none">
@@ -1149,6 +1220,24 @@
         if (firstElmo) { lastElmoTs = elmo?.ts || 0; firstElmo = false; return; }
         if (elmo && elmo.ts > lastElmoTs) { lastElmoTs = elmo.ts; triggerElmo(); }
       });
+
+      // ── Trophies: ranking + broadcast banner ──
+      let firstTrophies = true, knownTrophyKeys = new Set();
+      roomRef.child('trophies').on('value', snap => {
+        const data = snap.val() || {};
+        renderTrophyRanking(data);
+        if (firstTrophies) {
+          Object.keys(data).forEach(k => knownTrophyKeys.add(k));
+          firstTrophies = false;
+          return;
+        }
+        Object.entries(data).forEach(([k, t]) => {
+          if (!knownTrophyKeys.has(k)) {
+            knownTrophyKeys.add(k);
+            showTrophyBanner(t.name, t.avatar);
+          }
+        });
+      });
     }
 
     // ── Shared render (participants + revealed listeners both call this) ──
@@ -1188,6 +1277,8 @@
 
       if (isRevealed) showResults(voters);
       else document.getElementById('resultsBox').classList.remove('visible');
+
+      updateGameVisibility();
     }
 
     // ── Card selection ────────────────────────────────────
@@ -1337,6 +1428,180 @@
       voteEl.className = 'vote-card' +
         (isChanged ? ' changed' : isRevealed ? ' revealed' : hasVote ? ' voted' : '');
       voteEl.textContent = isRevealed ? (vote || '—') : hasVote ? '✓' : '…';
+    }
+
+    // ── Mini-game ─────────────────────────────────────────
+    const GCOLS = 20, GROWS = 20, GCELL = 10;
+    let gameState = null, gameInterval = null;
+
+    function updateGameVisibility() {
+      const btn = document.getElementById('gameBtn');
+      const panel = document.getElementById('gamePanel');
+      if (!btn) return;
+      const show = myRole === 'voter' && !!myVote && !isRevealed;
+      btn.style.display = show ? '' : 'none';
+      if (!show) {
+        panel.style.display = 'none';
+        stopGame();
+      }
+    }
+
+    function openGame() {
+      document.getElementById('gameBtn').style.display = 'none';
+      document.getElementById('gamePanel').style.display = '';
+      document.getElementById('gameWin').style.display = 'none';
+      startGame();
+    }
+
+    function closeGame() {
+      document.getElementById('gamePanel').style.display = 'none';
+      const btn = document.getElementById('gameBtn');
+      if (myRole === 'voter' && myVote && !isRevealed) btn.style.display = '';
+      stopGame();
+    }
+
+    function startGame() {
+      const cx = Math.floor(GCOLS / 2), cy = Math.floor(GROWS / 2);
+      gameState = {
+        snake: [{ x: cx, y: cy }],
+        dir: { x: 1, y: 0 },
+        nextDir: { x: 1, y: 0 },
+        dot: randomGameDot([{ x: cx, y: cy }]),
+        score: 0, won: false
+      };
+      document.getElementById('gameScore').textContent = '0 / 5 Punkte';
+      clearInterval(gameInterval);
+      gameInterval = setInterval(gameStep, 150);
+      drawGame();
+    }
+
+    function stopGame() {
+      clearInterval(gameInterval);
+      gameInterval = null;
+      gameState = null;
+    }
+
+    function randomGameDot(snake) {
+      let pos;
+      do {
+        pos = { x: Math.floor(Math.random() * GCOLS), y: Math.floor(Math.random() * GROWS) };
+      } while (snake.some(s => s.x === pos.x && s.y === pos.y));
+      return pos;
+    }
+
+    function gameStep() {
+      if (!gameState || gameState.won) return;
+      const s = gameState;
+      s.dir = s.nextDir;
+      const head = {
+        x: (s.snake[0].x + s.dir.x + GCOLS) % GCOLS,
+        y: (s.snake[0].y + s.dir.y + GROWS) % GROWS
+      };
+      const ate = head.x === s.dot.x && head.y === s.dot.y;
+      s.snake.unshift(head);
+      if (!ate) s.snake.pop();
+      if (ate) {
+        s.score++;
+        document.getElementById('gameScore').textContent = `${s.score} / 5 Punkte`;
+        if (s.score >= 5) {
+          s.won = true;
+          clearInterval(gameInterval);
+          onGameWin();
+        } else {
+          s.dot = randomGameDot(s.snake);
+        }
+      }
+      drawGame();
+    }
+
+    function drawGame() {
+      const canvas = document.getElementById('gameCanvas');
+      if (!canvas || !gameState) return;
+      const ctx = canvas.getContext('2d');
+      const dark = document.documentElement.classList.contains('dark');
+      ctx.fillStyle = dark ? '#0f172a' : '#f8fafc';
+      ctx.fillRect(0, 0, GCOLS * GCELL, GROWS * GCELL);
+      // Snake
+      gameState.snake.forEach((seg, i) => {
+        ctx.fillStyle = i === 0 ? '#e94560' : (dark ? '#3b82f6' : '#93c5fd');
+        ctx.fillRect(seg.x * GCELL + 1, seg.y * GCELL + 1, GCELL - 2, GCELL - 2);
+      });
+      // Dot
+      ctx.fillStyle = '#f59e0b';
+      ctx.beginPath();
+      ctx.arc(gameState.dot.x * GCELL + GCELL / 2, gameState.dot.y * GCELL + GCELL / 2, GCELL / 2 - 1, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    document.addEventListener('keydown', e => {
+      if (!gameState || !document.getElementById('gamePanel')?.offsetParent) return;
+      const map = { ArrowUp: {x:0,y:-1}, ArrowDown: {x:0,y:1}, ArrowLeft: {x:-1,y:0}, ArrowRight: {x:1,y:0} };
+      const d = map[e.key];
+      if (!d) return;
+      if (d.x === -gameState.dir.x && d.y === -gameState.dir.y) return;
+      gameState.nextDir = d;
+      e.preventDefault();
+    });
+
+    async function onGameWin() {
+      drawGame();
+      document.getElementById('gameWin').style.display = '';
+      document.getElementById('gameScore').textContent = '5 / 5 Punkte 🎉';
+      const avatarVal = myAvatar && myAvatar.startsWith('data:') ? '📷' : (myAvatar || '😎');
+      try {
+        await roomRef.child('trophies').push({
+          name: myName,
+          avatar: avatarVal,
+          ts: firebase.database.ServerValue.TIMESTAMP
+        });
+      } catch(e) {
+        logError('Trophy save failed', { code: e.code });
+      }
+    }
+
+    function showTrophyBanner(name, avatar) {
+      const existing = document.querySelector('.trophy-banner');
+      if (existing) existing.remove();
+      const el = document.createElement('div');
+      el.className = 'trophy-banner';
+      el.textContent = `🏆 ${avatar || ''} ${name} hat gewonnen!`;
+      document.body.appendChild(el);
+      setTimeout(() => el.remove(), 5000);
+    }
+
+    function renderTrophyRanking(data) {
+      const section = document.getElementById('trophySection');
+      const list    = document.getElementById('trophyList');
+      const entries = Object.values(data);
+      if (!entries.length) { section.style.display = 'none'; return; }
+      // Aggregate by name
+      const counts = {};
+      entries.forEach(t => {
+        const key = t.name || '?';
+        if (!counts[key]) counts[key] = { name: t.name, avatar: t.avatar, cups: 0 };
+        counts[key].cups++;
+      });
+      const sorted = Object.values(counts).sort((a, b) => b.cups - a.cups);
+      const medals = ['🥇','🥈','🥉'];
+      list.innerHTML = '';
+      sorted.forEach((p, i) => {
+        const row = document.createElement('div');
+        row.className = 'trophy-row';
+        const medal = document.createElement('span');
+        medal.textContent = medals[i] || '🏅';
+        const av = document.createElement('span');
+        av.className = 'trophy-avatar';
+        av.textContent = p.avatar || '';
+        const nm = document.createElement('span');
+        nm.className = 'trophy-name';
+        nm.textContent = p.name;
+        const cups = document.createElement('span');
+        cups.className = 'trophy-cups';
+        cups.textContent = p.cups === 1 ? '1 Pokal' : `${p.cups} Pokale`;
+        row.appendChild(medal); row.appendChild(av); row.appendChild(nm); row.appendChild(cups);
+        list.appendChild(row);
+      });
+      section.style.display = '';
     }
 
     // ── Reveal button ─────────────────────────────────────
