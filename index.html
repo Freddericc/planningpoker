@@ -5,7 +5,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Planning Poker</title>
   <link rel="icon" type="image/svg+xml" href="icon.svg">
-  <script>if(localStorage.getItem('pp_dark')==='1')document.documentElement.classList.add('dark');</script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&display=swap" rel="stylesheet">
+  <script>
+    (function(){
+      const t = localStorage.getItem('pp_theme') || (localStorage.getItem('pp_dark')==='1' ? 'dark' : 'light');
+      if (t === 'dark') document.documentElement.classList.add('dark');
+      if (t === 'wow')  document.documentElement.classList.add('wow');
+    })();
+  </script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -248,6 +257,64 @@
     html.dark .cam-paste-zone { color: #94a3b8; }
     html.dark .cam-btn-secondary { background: #0f172a; border-color: #334155; color: #f1f5f9; }
     html.dark .cam-btn-secondary:hover { background: #334155; }
+
+    /* ══════════════════════════════════════
+       WOW FOREVER MODE
+    ══════════════════════════════════════ */
+    html.wow body { background: radial-gradient(ellipse at 50% 0%, #2a1c08 0%, #080500 70%); color: #f4d675; font-family: 'Cinzel', 'Georgia', serif; }
+    html.wow h1   { color: #f0c040; text-shadow: 0 0 24px rgba(200,160,40,0.6); letter-spacing: 0.04em; }
+    html.wow .subtitle { color: #a08c3a; }
+
+    html.wow .panel {
+      background: linear-gradient(180deg, #2a1f0a 0%, #1a1200 100%);
+      border: 1px solid #6b4f10;
+      box-shadow: 0 0 0 1px #c4a228, 0 0 40px rgba(0,0,0,0.9), inset 0 1px 0 rgba(200,160,40,0.08);
+    }
+    html.wow .field-label { color: #a08c3a; text-transform: uppercase; font-size: 0.68rem; letter-spacing: 0.1em; }
+    html.wow input { background: #0d0900; border-color: #6b4f10; color: #f4d675; }
+    html.wow input:focus { background: #120d02; border-color: #c4a228; box-shadow: 0 0 0 3px rgba(196,162,40,0.25); }
+    html.wow input::placeholder { color: #5a4a1a; }
+
+    html.wow .avatar-btn { background: linear-gradient(180deg, #2a1f0a 0%, #1a1200 100%); border: 1px solid #6b4f10; box-shadow: 0 0 0 1px #3a2a05; }
+    html.wow .avatar-btn:hover { border-color: #c4a228; box-shadow: 0 0 0 1px #c4a228, 0 0 8px rgba(196,162,40,0.3); }
+    html.wow .avatar-btn.selected { border-color: #ffd700; background: linear-gradient(180deg, #3d2f00 0%, #2a1f00 100%); box-shadow: 0 0 0 1px #ffd700, 0 0 14px rgba(255,215,0,0.45); }
+
+    html.wow .mode-toggle { background: #0d0900; border-color: #6b4f10; box-shadow: 0 0 0 1px #3a2a05; }
+    html.wow .mode-opt { color: #a08c3a; }
+    html.wow .mode-opt.active { background: linear-gradient(180deg, #3d2f00 0%, #2a1f00 100%); color: #ffd700; box-shadow: 0 0 0 1px #c4a228; border-radius: 6px; }
+
+    html.wow .action-btn { background: linear-gradient(180deg, #2d2010 0%, #1a1000 50%, #2d2010 100%); border: 1px solid #8b6914; box-shadow: 0 0 0 1px #c4a228, inset 0 1px 0 rgba(255,200,50,0.1); color: #f4d675; }
+    html.wow .action-btn:hover { background: linear-gradient(180deg, #3d2f10 0%, #2a1f00 50%, #3d2f10 100%); border-color: #c4a228; box-shadow: 0 0 0 1px #ffd700, 0 0 14px rgba(255,215,0,0.3), inset 0 1px 0 rgba(255,200,50,0.15); }
+    html.wow .action-icon { filter: drop-shadow(0 0 4px rgba(200,160,40,0.5)); }
+    html.wow .action-name { color: #ffd700; font-family: 'Cinzel', serif; }
+    html.wow .action-desc { color: #7a6020; }
+
+    html.wow .last-room-card { background: linear-gradient(180deg, #2a1f0a 0%, #1a1200 100%); border: 1px solid #6b4f10; box-shadow: 0 0 0 1px #c4a228; }
+    html.wow .last-room-name { color: #ffd700; }
+    html.wow .last-room-meta { color: #a08c3a; }
+    html.wow .last-room-btn { background: linear-gradient(180deg, #2d2010 0%, #1a1000 100%); border-color: #8b6914; box-shadow: 0 0 0 1px #c4a228; color: #ffd700; }
+    html.wow .last-room-btn:hover { box-shadow: 0 0 0 1px #ffd700, 0 0 8px rgba(255,215,0,0.3); }
+
+    html.wow .dark-toggle { border-color: #6b4f10; color: #a08c3a; background: linear-gradient(180deg, #2a1f0a 0%, #1a1200 100%); }
+    html.wow .dark-toggle:hover { border-color: #c4a228; color: #ffd700; }
+
+    html.wow .modal-overlay { background: rgba(8,5,0,0.88); }
+    html.wow .modal-dialog { background: linear-gradient(180deg, #2a1f0a 0%, #1a1200 100%); border: 1px solid #6b4f10; box-shadow: 0 0 0 1px #c4a228, 0 0 40px rgba(0,0,0,0.9); }
+    html.wow .modal-dialog h3 { color: #ffd700; font-family: 'Cinzel', serif; }
+    html.wow .modal-dialog p  { color: #a08c3a; }
+    html.wow .modal-cancel { background: linear-gradient(180deg, #2a1f0a 0%, #1a1200 100%); border-color: #6b4f10; color: #a08c3a; }
+    html.wow .modal-cancel:hover { border-color: #c4a228; color: #ffd700; }
+    html.wow .modal-confirm { background: linear-gradient(180deg, #5a0010 0%, #3a0008 100%); border-color: #8b0000; box-shadow: 0 0 0 1px #c41e3a; color: #ff9090; }
+    html.wow .modal-confirm:hover { background: linear-gradient(180deg, #7a0020 0%, #5a0010 100%); box-shadow: 0 0 0 1px #ff2040, 0 0 10px rgba(196,30,58,0.5); }
+
+    html.wow .cam-dialog { background: linear-gradient(180deg, #2a1f0a 0%, #1a1200 100%); border: 1px solid #6b4f10; box-shadow: 0 0 0 1px #c4a228; }
+    html.wow .cam-title   { color: #ffd700; font-family: 'Cinzel', serif; }
+    html.wow .cam-circle  { border-color: #c4a228; }
+    html.wow .cam-tab { background: #0d0900; border-color: #6b4f10; color: #a08c3a; }
+    html.wow .cam-tab.active { background: linear-gradient(180deg, #3d2f00 0%, #2a1f00 100%); border-color: #c4a228; color: #ffd700; }
+    html.wow .cam-paste-zone { border-color: #c4a228; color: #a08c3a; }
+    html.wow .cam-btn-secondary { background: linear-gradient(180deg, #2a1f0a 0%, #1a1200 100%); border-color: #6b4f10; color: #a08c3a; }
+    html.wow .cam-btn-secondary:hover { border-color: #c4a228; color: #ffd700; }
 
     /* ── Delete button ── */
     .delete-all-btn {
@@ -518,7 +585,7 @@ document.getElementById('name').addEventListener('keydown', e => {
       let latest = null;
       for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
-        if (!key || !key.startsWith('pp_') || key === 'pp_dark') continue;
+        if (!key || !key.startsWith('pp_') || key === 'pp_dark' || key === 'pp_theme' || key === 'pp_selfie') continue;
         try {
           const data = JSON.parse(localStorage.getItem(key));
           if (data?.name && data?.ts && (!latest || data.ts > latest.ts)) {
@@ -693,14 +760,23 @@ document.getElementById('name').addEventListener('keydown', e => {
       if (_camStream) { _camStream.getTracks().forEach(t => t.stop()); _camStream = null; }
     }
 
-    // ── Dark mode ─────────────────────────────────────────
+    // ── Theme toggle (light → dark → wow → light) ────────
     function toggleDark() {
-      const d = document.documentElement.classList.toggle('dark');
-      localStorage.setItem('pp_dark', d ? '1' : '0');
-      document.getElementById('darkToggle').textContent = d ? '☀️' : '🌙';
+      const html = document.documentElement;
+      const cur = html.classList.contains('wow') ? 'wow' : html.classList.contains('dark') ? 'dark' : 'light';
+      const next = cur === 'light' ? 'dark' : cur === 'dark' ? 'wow' : 'light';
+      html.classList.remove('dark', 'wow');
+      if (next === 'dark') html.classList.add('dark');
+      if (next === 'wow')  html.classList.add('wow');
+      localStorage.setItem('pp_theme', next);
+      const icons = { light: '🌙', dark: '⚔️', wow: '☀️' };
+      document.getElementById('darkToggle').textContent = icons[next];
     }
-    document.getElementById('darkToggle').textContent =
-      document.documentElement.classList.contains('dark') ? '☀️' : '🌙';
+    (function(){
+      const cur = document.documentElement.classList.contains('wow') ? 'wow' : document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+      const icons = { light: '🌙', dark: '⚔️', wow: '☀️' };
+      document.getElementById('darkToggle').textContent = icons[cur];
+    })();
 
     // ── Delete all data ───────────────────────────────────
     function openDeleteModal() {
@@ -726,7 +802,7 @@ document.getElementById('name').addEventListener('keydown', e => {
 
         // Clear local pp_* entries (except dark mode pref)
         Object.keys(localStorage)
-          .filter(k => k.startsWith('pp_') && k !== 'pp_dark')
+          .filter(k => k.startsWith('pp_') && k !== 'pp_theme' && k !== 'pp_dark')
           .forEach(k => localStorage.removeItem(k));
         selfieBase64 = null;
         // Reset camera button to plain icon
