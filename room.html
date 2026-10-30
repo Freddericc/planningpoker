@@ -574,7 +574,7 @@
     /* ══════════════════════════════════════
        WOW FOREVER MODE
     ══════════════════════════════════════ */
-    html.wow body { background: radial-gradient(ellipse at 50% 0%, #2a1c08 0%, #080500 70%); color: #f4d675; font-family: 'Cinzel', 'Georgia', serif; }
+    html.wow body { background: url('WoW_Background.png') center center / cover no-repeat fixed, #080500; color: #f4d675; font-family: 'Cinzel', 'Georgia', serif; }
 
     html.wow header { background: linear-gradient(180deg, #2a1f0a 0%, #1a1200 100%); border-bottom: 1px solid #c4a228; box-shadow: 0 2px 12px rgba(0,0,0,0.7); }
     html.wow .room-title { color: #ffd700; text-shadow: 0 0 16px rgba(200,160,40,0.5); font-family: 'Cinzel', serif; }
@@ -611,8 +611,8 @@
 
     html.wow .observer-chip { background: #1a1200; border-color: #6b4f10; color: #a08c3a; }
 
-    html.wow .game-btn { background: linear-gradient(180deg, #2d2010 0%, #1a1000 100%); border-color: #8b6914; box-shadow: 0 0 0 1px #c4a228; color: #ffd700; }
-    html.wow .game-btn:hover { box-shadow: 0 0 0 1px #ffd700, 0 0 10px rgba(255,215,0,0.3); }
+    html.wow .game-trigger { background: linear-gradient(180deg, #2d2010 0%, #1a1000 100%); border-color: #8b6914 !important; box-shadow: 0 0 0 1px #c4a228; color: #ffd700 !important; }
+    html.wow .game-trigger:hover { box-shadow: 0 0 0 1px #ffd700, 0 0 10px rgba(255,215,0,0.3); border-color: #ffd700 !important; }
     html.wow .game-panel { background: linear-gradient(180deg, #2a1f0a 0%, #1a1200 100%); border: 1px solid #c4a228; box-shadow: 0 0 0 1px #c4a228, 0 0 30px rgba(0,0,0,0.8); }
     html.wow .game-title { color: #ffd700; font-family: 'Cinzel', serif; }
     html.wow #gameCanvas { border: 1px solid #c4a228; box-shadow: 0 0 0 1px #6b4f10; }
@@ -1531,7 +1531,7 @@
       const panel = document.getElementById('gamePanel');
       if (!btn) return;
       const show = myRole === 'voter' && !!myVote && !isRevealed;
-      btn.style.display = show ? '' : 'none';
+      btn.style.display = show ? 'block' : 'none';
       if (!show) {
         panel.style.display = 'none';
         stopGame();
@@ -1548,7 +1548,7 @@
     function closeGame() {
       document.getElementById('gamePanel').style.display = 'none';
       const btn = document.getElementById('gameBtn');
-      if (myRole === 'voter' && myVote && !isRevealed) btn.style.display = '';
+      if (myRole === 'voter' && myVote && !isRevealed) btn.style.display = 'block';
       stopGame();
     }
 
